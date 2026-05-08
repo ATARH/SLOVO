@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Слово+ — мобильный прототип</title>
+  <style>
+    :root {
+      --bg: #FAF7F2;
+      --surface: #FFFFFF;
+      --fg: #1B2A4E;
+      --muted: #8A8680;
+      --border: color-mix(in oklch, #8A8680 25%, transparent);
+      --accent: #D4AF7A;
+      --terra: #C4614A;
+      --dark: #0F1729;
+      --success: #2D8A5B;
+      --font-display: "Cormorant Garamond", "PT Serif", Georgia, serif;
+      --font-body: Inter, "PT Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: ui-monospace, "JetBrains Mono", Menlo, monospace;
+      --ui-scale: 1;
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background:
+        radial-gradient(circle at 22% 8%, color-mix(in oklch, var(--accent) 26%, transparent), transparent 32%),
+        radial-gradient(circle at 78% 18%, color-mix(in oklch, var(--terra) 15%, transparent), transparent 30%),
+        var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .shell {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 26px 28px 34px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    .kicker {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 700 12px/1 var(--font-mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(38px, 4.2vw, 68px);
+      line-height: .98;
+      letter-spacing: -0.01em;
+      font-weight: 600;
+    }
+
+    .subhead {
+      margin: 10px 0 0;
+      max-width: 760px;
+      color: color-mix(in oklch, var(--fg) 72%, var(--muted));
+      font-size: 17px;
+    }
+
+    .controls {
+      width: 360px;
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: color-mix(in oklch, var(--surface) 88%, transparent);
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--terra);
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .panel-title strong {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .segmented {
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: color-mix(in oklch, var(--surface) 80%, transparent);
+    }
+
+    .segmented button {
+      min-height: 36px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 12px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .segmented button.active {
+      background: var(--fg);
+      color: var(--bg);
+    }
+
+    .device-row {
+      display: grid;
+      place-items: center;
+      min-height: 910px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, color-mix(in oklch, var(--surface) 80%, transparent), transparent),
+        color-mix(in oklch, var(--bg) 88%, var(--surface));
+      overflow: hidden;
+      position: relative;
+    }
+
+    .flow {
+      position: absolute;
+      inset: auto 5% 4% 5%;
+      height: 180px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--accent) 32%, transparent), color-mix(in oklch, var(--terra) 18%, transparent), transparent);
+      filter: blur(24px);
+      animation: flow 8s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes flow {
+      from { transform: translateX(-10%) scaleX(.8); opacity: .45; }
+      to { transform: translateX(10%) scaleX(1.08); opacity: .85; }
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      padding: 12px;
+      border-radius: 56px;
+      background: linear-gradient(150deg, #262832, #0d1018);
+      box-shadow: 0 26px 70px rgba(15, 23, 41, .28), inset 0 0 0 2px #05060a;
+      position: relative;
+      z-index: 1;
+    }
+
+    .android-phone {
+      width: 412px;
+      height: 900px;
+      border-radius: 38px;
+      padding: 10px;
+      background: linear-gradient(150deg, #273040, #0d111c);
+    }
+
+    .screen {
+      height: 100%;
+      overflow: hidden;
+      border-radius: 44px;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .android-phone .screen { border-radius: 30px; }
+
+    .island {
+      position: absolute;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 124px;
+      height: 36px;
+      background: #000;
+      border-radius: 999px;
+      z-index: 4;
+    }
+
+    .hole {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #05060a;
+      z-index: 4;
+    }
+
+    .statusbar {
+      height: 48px;
+      padding: 17px 26px 0;
+      display: flex;
+      justify-content: space-between;
+      color: var(--fg);
+      font-size: 15px;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: currentColor; }
+    .battery { width: 25px !important; }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px 20px 22px;
+      scroll-behavior: smooth;
+    }
+
+    .content::-webkit-scrollbar { display: none; }
+
+    .home-indicator {
+      height: 28px;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .home-indicator::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--fg);
+      opacity: .86;
+    }
+
+    .android-nav {
+      height: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 28px;
+      flex: 0 0 auto;
+    }
+
+    .android-nav span {
+      width: 18px;
+      height: 4px;
+      border-radius: 999px;
+      background: color-mix(in oklch, var(--fg) 76%, transparent);
+    }
+
+    .app-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .greeting { margin: 0 0 4px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
+    .app-head h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: calc(31px * var(--ui-scale));
+      line-height: 1.02;
+      font-weight: 600;
+    }
+
+    .icon-btn {
+      width: 46px;
+      height: 46px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--fg);
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .icon-btn svg, .tab svg, .small-icon {
+      width: 21px;
+      height: 21px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.55;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hero-card {
+      padding: 18px;
+      border-radius: 26px;
+      background: var(--dark);
+      color: var(--bg);
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 18px;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      right: -86px;
+      top: -96px;
+      border-radius: 50%;
+      background: color-mix(in oklch, var(--accent) 34%, transparent);
+      animation: pulse 4.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% { transform: translate(-12px, 18px) scale(1.08); opacity: .75; }
+    }
+
+    .hero-card > * { position: relative; }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: color-mix(in oklch, var(--accent) 82%, white);
+      font: 700 11px/1 var(--font-mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .sermon-title {
+      margin: 0 0 8px;
+      max-width: 13ch;
+      font-family: var(--font-display);
+      font-size: calc(27px * var(--ui-scale));
+      line-height: 1.05;
+      font-weight: 600;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: calc(12px * var(--ui-scale));
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero-card .meta { color: color-mix(in oklch, var(--bg) 70%, transparent); }
+
+    .player {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .play {
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--bg);
+      color: var(--dark);
+    }
+
+    .bar {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.24);
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: 42%;
+      background: var(--accent);
+      border-radius: inherit;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 18px 0 10px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: calc(20px * var(--ui-scale));
+      font-family: var(--font-display);
+      font-weight: 600;
+    }
+
+    .see-all {
+      border: 0;
+      background: transparent;
+      color: var(--terra);
+      font-weight: 700;
+      min-height: 44px;
+      padding: 0 2px;
+    }
+
+    .sermon-row {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 12px;
+      align-items: center;
+      min-height: 78px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .cover {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, color-mix(in oklch, var(--accent) 42%, var(--bg)), color-mix(in oklch, var(--terra) 22%, var(--surface)));
+      border: 1px solid color-mix(in oklch, var(--accent) 28%, transparent);
+      position: relative;
+    }
+
+    .cover::after {
+      content: "";
+      position: absolute;
+      inset: 16px 18px;
+      border-block: 1.5px solid color-mix(in oklch, var(--fg) 70%, transparent);
+    }
+
+    .row-title { font-weight: 700; font-size: calc(15px * var(--ui-scale)); line-height: 1.22; }
+    .row-sub { margin-top: 3px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
+
+    .topic-row {
+      display: flex;
+      gap: 8px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .chip {
+      min-height: 44px;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: calc(13px * var(--ui-scale));
+    }
+
+    .chip.active {
+      background: color-mix(in oklch, var(--accent) 26%, var(--surface));
+      border-color: color-mix(in oklch, var(--accent) 46%, var(--border));
+    }
+
+    .tabbar {
+      height: 70px;
+      padding: 6px 10px 0;
+      border-top: 1px solid var(--border);
+      background: color-mix(in oklch, var(--surface) 92%, transparent);
+      backdrop-filter: blur(18px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      flex: 0 0 auto;
+    }
+
+    .tab {
+      border: 0;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      min-height: 58px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .tab.active { color: var(--terra); font-weight: 700; }
+
+    .detail-cover {
+      height: 220px;
+      border-radius: 28px;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 70% 22%, color-mix(in oklch, var(--accent) 56%, transparent), transparent 34%),
+        linear-gradient(155deg, var(--dark), #243250);
+      color: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+      margin-bottom: 14px;
+    }
+
+    .detail-title {
+      margin: 0 0 6px;
+      font-family: var(--font-display);
+      font-size: calc(30px * var(--ui-scale));
+      line-height: 1.03;
+      font-weight: 600;
+    }
+
+    .player-sheet {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--surface);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .light-bar {
+      height: 7px;
+      border-radius: 999px;
+      background: color-mix(in oklch, var(--muted) 20%, transparent);
+      overflow: hidden;
+    }
+
+    .light-bar span { display: block; width: 36%; height: 100%; background: var(--terra); }
+
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      padding: 4px;
+      border-radius: 16px;
+      background: color-mix(in oklch, var(--muted) 12%, transparent);
+      margin: 12px 0;
+    }
+
+    .mode-tabs button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 13px;
+      background: transparent;
+      color: var(--muted);
+      font-size: calc(13px * var(--ui-scale));
+    }
+
+    .mode-tabs button.active {
+      background: var(--surface);
+      color: var(--fg);
+      font-weight: 700;
+    }
+
+    .transcript {
+      display: grid;
+      gap: 8px;
+      font-size: calc(16px * var(--ui-scale));
+      line-height: 1.55;
+    }
+
+    .phrase {
+      border: 0;
+      text-align: start;
+      padding: 10px 12px;
+      min-height: 48px;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--fg);
+    }
+
+    .phrase.active {
+      background: color-mix(in oklch, var(--accent) 32%, var(--surface));
+      box-shadow: inset 3px 0 0 var(--terra);
+    }
+
+    .reference {
+      color: var(--terra);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .search-box {
+      height: 52px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 0 14px;
+      margin-bottom: 14px;
+    }
+
+    .search-box input {
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--fg);
+      min-width: 0;
+      font-size: calc(16px * var(--ui-scale));
+    }
+
+    .result-card, .chat-card {
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .result-card button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: start;
+      padding: 0;
+      min-height: 54px;
+    }
+
+    mark {
+      background: color-mix(in oklch, var(--accent) 42%, transparent);
+      color: var(--fg);
+      border-radius: 4px;
+      padding: 0 2px;
+    }
+
+    .chat-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .bubble {
+      max-width: 86%;
+      padding: 11px 13px;
+      border-radius: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: calc(14px * var(--ui-scale));
+    }
+
+    .bubble.me {
+      justify-self: end;
+      background: color-mix(in oklch, var(--accent) 34%, var(--surface));
+      border-color: color-mix(in oklch, var(--accent) 42%, var(--border));
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr 46px;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .composer input {
+      min-height: 46px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0 14px;
+      background: var(--surface);
+      color: var(--fg);
+    }
+
+    .send {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 0;
+      background: var(--terra);
+      color: white;
+      display: grid;
+      place-items: center;
+    }
+
+    [data-ios-screen], [data-android-screen] { display: none; }
+    [data-ios-screen].active, [data-android-screen].active { display: block; }
+
+    @media (max-width: 980px) {
+      .topbar, .stage { grid-template-columns: 1fr; }
+      .controls { width: 100%; }
+      .device-row { min-height: auto; padding: 24px 0; }
+      .shell { padding-inline: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <p class="kicker">High-fidelity mobile prototype</p>
+        <h1>Слово+ для слушателей</h1>
+        <p class="subhead">Два платформенных макета: iOS показывает ленту, плеер и синхронный транскрипт; Android показывает поиск по смыслу, библейские ссылки и новый чат общины.</p>
+      </div>
+      <div class="controls" aria-label="Настройки доступности прототипа">
+        <div class="control-label"><span>Крупность интерфейса</span><strong id="scaleLabel">100%</strong></div>
+        <input id="scaleRange" type="range" min="100" max="130" value="100" step="5" />
+        <div class="control-label"><span>Flow-анимация</span><strong>мягкая</strong></div>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section>
+        <div class="panel-title">
+          <strong>iOS: слушать и читать</strong>
+          <div class="segmented" data-target="ios">
+            <button class="active" data-screen="home">Лента</button>
+            <button data-screen="sermon">Плеер</button>
+            <button data-screen="transcript">Караоке</button>
+          </div>
+        </div>
+        <div class="device-row">
+          <span class="flow" aria-hidden="true"></span>
+          <div class="phone" data-od-id="ios-device">
+            <span class="island" aria-hidden="true"></span>
+            <div class="screen">
+              <div class="statusbar">
+                <span class="num">9:41</span>
+                <span class="right">
+                  <svg viewBox="0 0 17 11" aria-hidden="true"><rect x="0" y="7" width="3" height="4" rx=".6"/><rect x="4" y="5" width="3" height="6" rx=".6"/><rect x="8" y="3" width="3" height="8" rx=".6"/><rect x="12" y="0" width="3" height="11" rx=".6"/></svg>
+                  <svg viewBox="0 0 17 11" aria-hidden="true"><path d="M8.5 1.5C5.5 1.5 2.7 2.6.5 4.6L2 6.1c1.8-1.6 4.1-2.5 6.5-2.5s4.7.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6 5 9.1c1-.9 2.2-1.4 3.5-1.4S11 8.2 12 9.1l1.5-1.5c-1.4-1.3-3.1-2-5-2s-3.6.7-5 2z"/></svg>
+                  <svg class="battery" viewBox="0 0 25 11" aria-hidden="true"><rect x=".5" y=".5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".45"/><rect x="22" y="3.5" width="1.5" height="4" rx=".4"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
+                </span>
+              </div>
+
+              <main class="content" data-od-id="ios-content">
+                <section data-ios-screen="home" class="active" data-od-id="home-feed">
+                  <div class="app-head">
+                    <div>
+                      <p class="greeting">Доброе утро, Анна</p>
+                      <h2>Продолжить слушать</h2>
+                    </div>
+                    <button class="icon-btn" aria-label="Настройки">
+                      <svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg>
+                    </button>
+                  </div>
+                  <article class="hero-card">
+                    <p class="eyebrow">Караоке-режим включён</p>
+                    <h3 class="sermon-title">Надежда, которая не стыдит</h3>
+                    <p class="meta">прот. Андрей Лебедев · 31 мин · Рим 5:1–5</p>
+                    <div class="player">
+                      <button class="play js-play" aria-label="Воспроизвести">
+                        <svg class="small-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      </button>
+                      <div>
+                        <div class="bar"><span></span></div>
+                        <p class="meta" style="margin: 6px 0 0;">12:48 / 31:04</p>
+                      </div>
+                    </div>
+                  </article>
+
+                  <div class="section-head">
+                    <h3>Темы недели</h3>
+                    <button class="see-all">Все</button>
+                  </div>
+                  <div class="topic-row">
+                    <button class="chip active">Надежда</button>
+                    <button class="chip">Молитва</button>
+                    <button class="chip">Семья</button>
+                  </div>
+
+                  <div class="section-head">
+                    <h3>Новое от авторов</h3>
+                    <button class="see-all js-open-sermon">Открыть</button>
+                  </div>
+                  <div class="sermon-row">
+                    <div class="cover"></div>
+                    <div>
+                      <div class="row-title">Слова, которые возвращают мир</div>
+                      <div class="row-sub">пастор Михаил Орлов · Церковь «Источник»</div>
+                      <div class="meta">42 мин · Прощение</div>
+                    </div>
+                  </div>
+                  <div class="sermon-row">
+                    <div class="cover"></div>
+                    <div>
+                      <div class="row-title">Мф 5: что значит быть милостивым</div>
+                      <div class="row-sub">о. Сергий Власов · Москва</div>
+                      <div class="meta">28 мин · Толкование Писания</div>
+                    </div>
+                  </div>
+                </section>
+
+                <section data-ios-screen="sermon" data-od-id="sermon-player">
+                  <div class="app-head">
+                    <button class="icon-btn js-ios-home" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <button class="icon-btn" aria-label="В избранное"><svg viewBox="0 0 24 24"><path d="m12 21-7-7a4.5 4.5 0 0 1 6.4-6.4l.6.6.6-.6A4.5 4.5 0 0 1 19 14l-7 7z"/></svg></button>
+                  </div>
+                  <div class="detail-cover">
+                    <p class="eyebrow">Проповедь дня</p>
+                    <h2 class="detail-title">Надежда, которая не стыдит</h2>
+                    <p class="meta">прот. Андрей Лебедев · 18 мая · 12 430 прослушиваний</p>
+                  </div>
+                  <div class="player-sheet">
+                    <div class="row-title">Сейчас: «…скорбь производит терпение»</div>
+                    <div class="light-bar" style="margin: 12px 0 8px;"><span></span></div>
+                    <div style="display:flex; justify-content:space-between;" class="meta"><span>12:48</span><span>31:04</span></div>
+                    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin-top:12px;">
+                      <button class="chip">-15</button>
+                      <button class="chip">0.75×</button>
+                      <button class="chip active js-play">Play</button>
+                      <button class="chip">1.25×</button>
+                      <button class="chip">+15</button>
+                    </div>
+                  </div>
+                  <div class="mode-tabs">
+                    <button>Описание</button>
+                    <button class="active js-open-transcript">Транскрипт</button>
+                    <button>Заметки</button>
+                  </div>
+                  <p style="font-size:calc(16px * var(--ui-scale));">В этой проповеди автор разбирает, как христианская надежда помогает проходить периоды тревоги без ухода от реальности.</p>
+                  <button class="chip js-open-transcript" style="width:100%; justify-content:center; min-height:48px;">Открыть синхронный текст</button>
+                </section>
+
+                <section data-ios-screen="transcript" data-od-id="karaoke-transcript">
+                  <div class="app-head">
+                    <button class="icon-btn js-open-sermon" aria-label="К плееру"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <div>
+                      <p class="greeting">12:48 · Рим 5</p>
+                      <h2>Транскрипт</h2>
+                    </div>
+                    <button class="icon-btn" aria-label="Заметка"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                  </div>
+                  <div class="player-sheet">
+                    <div class="row-title">Надежда, которая не стыдит</div>
+                    <div class="light-bar" style="margin-top:12px;"><span id="karaokeBar"></span></div>
+                  </div>
+                  <div class="transcript" id="phrases">
+                    <button class="phrase active">Итак, оправдавшись верою, мы имеем мир с Богом через Господа нашего Иисуса Христа.</button>
+                    <button class="phrase">Апостол Павел говорит не о спокойствии как отсутствии проблем, а о мире как основании.</button>
+                    <button class="phrase">Когда человек держится за <span class="reference">Рим 5:3–4</span>, скорбь перестаёт быть пустой.</button>
+                    <button class="phrase">Она производит терпение, терпение — опытность, а опытность — надежду.</button>
+                    <button class="phrase">Долгое нажатие на фразу создаёт заметку с таймкодом и исходным текстом.</button>
+                  </div>
+                </section>
+              </main>
+
+              <nav class="tabbar" data-od-id="ios-tabbar">
+                <button class="tab active js-ios-home"><svg viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>Лента</button>
+                <button class="tab"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Поиск</button>
+                <button class="tab"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M9 9h6M9 13h6"/></svg>Заметки</button>
+                <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Профиль</button>
+              </nav>
+              <div class="home-indicator" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel-title">
+          <strong>Android: найти и обсудить</strong>
+          <div class="segmented" data-target="android">
+            <button class="active" data-screen="search">Поиск</button>
+            <button data-screen="chat">Чат</button>
+          </div>
+        </div>
+        <div class="device-row">
+          <span class="flow" aria-hidden="true"></span>
+          <div class="phone android-phone" data-od-id="android-device">
+            <span class="hole" aria-hidden="true"></span>
+            <div class="screen">
+              <div class="statusbar">
+                <span class="num">9:41</span>
+                <span class="right">
+                  <svg viewBox="0 0 17 11" aria-hidden="true"><rect x="0" y="7" width="3" height="4" rx=".6"/><rect x="4" y="5" width="3" height="6" rx=".6"/><rect x="8" y="3" width="3" height="8" rx=".6"/><rect x="12" y="0" width="3" height="11" rx=".6"/></svg>
+                  <svg class="battery" viewBox="0 0 25 11" aria-hidden="true"><rect x=".5" y=".5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".45"/><rect x="22" y="3.5" width="1.5" height="4" rx=".4"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
+                </span>
+              </div>
+
+              <main class="content" data-od-id="android-content">
+                <section data-android-screen="search" class="active" data-od-id="search-screen">
+                  <div class="app-head">
+                    <div>
+                      <p class="greeting">Поиск по смыслу</p>
+                      <h2>Что хотите найти?</h2>
+                    </div>
+                    <button class="icon-btn js-chat" aria-label="Чат"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></button>
+                  </div>
+                  <label class="search-box">
+                    <svg class="small-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input id="searchInput" value="Мф 5 милостивые" aria-label="Поиск" />
+                  </label>
+                  <div class="topic-row">
+                    <button class="chip active">Проповеди</button>
+                    <button class="chip">Авторы</button>
+                    <button class="chip">Серии</button>
+                    <button class="chip">Заметки</button>
+                  </div>
+                  <div class="section-head">
+                    <h3>Найдено по тексту</h3>
+                    <span class="meta">0.42 сек</span>
+                  </div>
+                  <article class="result-card">
+                    <button class="js-open-sermon">
+                      <div class="row-title">Блаженны милостивые</div>
+                      <div class="row-sub">о. Сергий Власов · Толкование Писания · <mark>Мф 5:7</mark></div>
+                      <p style="margin:8px 0 0;">«...милость начинается не с чувства, а с решения увидеть другого человека...»</p>
+                    </button>
+                  </article>
+                  <article class="result-card">
+                    <button>
+                      <div class="row-title">Когда трудно простить</div>
+                      <div class="row-sub">пастор Михаил Орлов · Прощение</div>
+                      <p style="margin:8px 0 0;">Смысловое совпадение: <mark>милость</mark>, примирение, молитва за обидчика.</p>
+                    </button>
+                  </article>
+                  <div class="result-card" style="background:color-mix(in oklch, var(--accent) 17%, var(--surface));">
+                    <div class="row-title">Библейская ссылка</div>
+                    <p style="margin:6px 0 10px;"><strong>Мф 5:7</strong> — Блаженны милостивые, ибо они помилованы будут.</p>
+                    <button class="chip" style="width:100%; justify-content:center;">Открыть главу в Библии</button>
+                  </div>
+                </section>
+
+                <section data-android-screen="chat" data-od-id="community-chat">
+                  <div class="app-head">
+                    <button class="icon-btn js-search" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <div>
+                      <p class="greeting">Обсуждение проповеди</p>
+                      <h2>Группа «Надежда»</h2>
+                    </div>
+                  </div>
+                  <div class="chat-card">
+                    <div class="row-title">Правила чата</div>
+                    <p style="margin:6px 0 0; color:var(--muted);">Модерация защищает от спама и межконфессиональных споров. Обсуждаем мысль, не спорим о людях.</p>
+                  </div>
+                  <div class="chat-list" id="chatList">
+                    <div class="bubble"><strong>Елена</strong><br>Мне помог фрагмент про «мир как основание». Сохранила заметку на 12:48.</div>
+                    <div class="bubble me">Да, и удобно, что можно открыть Рим 5 прямо из текста.</div>
+                    <div class="bubble"><strong>Модератор</strong><br>Добавила подборку по теме «Надежда» в закреп.</div>
+                  </div>
+                  <div class="composer">
+                    <input id="chatInput" value="Спасибо за ссылку на фрагмент" aria-label="Сообщение" />
+                    <button class="send" id="sendBtn" aria-label="Отправить"><svg class="small-icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg></button>
+                  </div>
+                </section>
+              </main>
+
+              <nav class="tabbar" data-od-id="android-tabbar">
+                <button class="tab"><svg viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>Лента</button>
+                <button class="tab active js-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Поиск</button>
+                <button class="tab js-chat"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>Чат</button>
+                <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Профиль</button>
+              </nav>
+              <div class="android-nav" aria-hidden="true"><span></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "uiScale": 100
+    }/*EDITMODE-END*/;
+
+    const root = document.documentElement;
+    const scaleRange = document.getElementById("scaleRange");
+    const scaleLabel = document.getElementById("scaleLabel");
+    scaleRange.addEventListener("input", () => {
+      const value = Number(scaleRange.value);
+      root.style.setProperty("--ui-scale", value / 100);
+      scaleLabel.textContent = value + "%";
+    });
+
+    function showScreen(kind, name) {
+      const selector = kind === "ios" ? "[data-ios-screen]" : "[data-android-screen]";
+      document.querySelectorAll(selector).forEach((screen) => {
+        screen.classList.toggle("active", screen.dataset[kind + "Screen"] === name);
+      });
+      document.querySelectorAll(`.segmented[data-target="${kind}"] button`).forEach((button) => {
+        button.classList.toggle("active", button.dataset.screen === name);
+      });
+    }
+
+    document.querySelectorAll(".segmented button").forEach((button) => {
+      button.addEventListener("click", () => showScreen(button.closest(".segmented").dataset.target, button.dataset.screen));
+    });
+    document.querySelectorAll(".js-open-sermon").forEach((button) => button.addEventListener("click", () => showScreen("ios", "sermon")));
+    document.querySelectorAll(".js-open-transcript").forEach((button) => button.addEventListener("click", () => showScreen("ios", "transcript")));
+    document.querySelectorAll(".js-ios-home").forEach((button) => button.addEventListener("click", () => showScreen("ios", "home")));
+    document.querySelectorAll(".js-chat").forEach((button) => button.addEventListener("click", () => showScreen("android", "chat")));
+    document.querySelectorAll(".js-search").forEach((button) => button.addEventListener("click", () => showScreen("android", "search")));
+
+    const phrases = Array.from(document.querySelectorAll(".phrase"));
+    const karaokeBar = document.getElementById("karaokeBar");
+    let phraseIndex = 0;
+    setInterval(() => {
+      phrases.forEach((phrase, index) => phrase.classList.toggle("active", index === phraseIndex));
+      if (karaokeBar) karaokeBar.style.width = `${22 + phraseIndex * 16}%`;
+      phraseIndex = (phraseIndex + 1) % phrases.length;
+    }, 1800);
+    phrases.forEach((phrase, index) => {
+      phrase.addEventListener("click", () => {
+        phraseIndex = index;
+        phrases.forEach((item, itemIndex) => item.classList.toggle("active", itemIndex === index));
+      });
+    });
+
+    document.getElementById("sendBtn").addEventListener("click", () => {
+      const input = document.getElementById("chatInput");
+      const value = input.value.trim();
+      if (!value) return;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble me";
+      bubble.textContent = value;
+      document.getElementById("chatList").appendChild(bubble);
+      input.value = "";
+    });
+  </script>
+</body>
+</html>
