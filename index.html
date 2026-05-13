@@ -1,1043 +1,2083 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Слово+ — мобильный прототип</title>
-  <style>
-    :root {
-      --bg: #FAF7F2;
-      --surface: #FFFFFF;
-      --fg: #1B2A4E;
-      --muted: #8A8680;
-      --border: color-mix(in oklch, #8A8680 25%, transparent);
-      --accent: #D4AF7A;
-      --terra: #C4614A;
-      --dark: #0F1729;
-      --success: #2D8A5B;
-      --font-display: "Cormorant Garamond", "PT Serif", Georgia, serif;
-      --font-body: Inter, "PT Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      --font-mono: ui-monospace, "JetBrains Mono", Menlo, monospace;
-      --ui-scale: 1;
-      --radius: 22px;
-    }
-
-    * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
-    body {
-      background:
-        radial-gradient(circle at 22% 8%, color-mix(in oklch, var(--accent) 26%, transparent), transparent 32%),
-        radial-gradient(circle at 78% 18%, color-mix(in oklch, var(--terra) 15%, transparent), transparent 30%),
-        var(--bg);
-      color: var(--fg);
-      font-family: var(--font-body);
-      line-height: 1.45;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    button, input { font: inherit; }
-    button { cursor: pointer; }
-
-    .shell {
-      width: min(1440px, 100%);
-      margin: 0 auto;
-      padding: 26px 28px 34px;
-    }
-
-    .topbar {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 22px;
-      align-items: end;
-      margin-bottom: 20px;
-    }
-
-    .kicker {
-      margin: 0 0 6px;
-      color: var(--muted);
-      font: 700 12px/1 var(--font-mono);
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: clamp(38px, 4.2vw, 68px);
-      line-height: .98;
-      letter-spacing: -0.01em;
-      font-weight: 600;
-    }
-
-    .subhead {
-      margin: 10px 0 0;
-      max-width: 760px;
-      color: color-mix(in oklch, var(--fg) 72%, var(--muted));
-      font-size: 17px;
-    }
-
-    .controls {
-      width: 360px;
-      display: grid;
-      gap: 12px;
-      padding: 14px;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: color-mix(in oklch, var(--surface) 88%, transparent);
-    }
-
-    .control-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--terra);
-    }
-
-    .stage {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 28px;
-      align-items: start;
-    }
-
-    .panel-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: center;
-      margin-bottom: 12px;
-      padding: 0 4px;
-    }
-
-    .panel-title strong {
-      font-family: var(--font-display);
-      font-size: 24px;
-      font-weight: 600;
-    }
-
-    .segmented {
-      display: flex;
-      gap: 6px;
-      padding: 4px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: color-mix(in oklch, var(--surface) 80%, transparent);
-    }
-
-    .segmented button {
-      min-height: 36px;
-      border: 0;
-      border-radius: 999px;
-      padding: 0 12px;
-      background: transparent;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .segmented button.active {
-      background: var(--fg);
-      color: var(--bg);
-    }
-
-    .device-row {
-      display: grid;
-      place-items: center;
-      min-height: 910px;
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      background:
-        linear-gradient(180deg, color-mix(in oklch, var(--surface) 80%, transparent), transparent),
-        color-mix(in oklch, var(--bg) 88%, var(--surface));
-      overflow: hidden;
-      position: relative;
-    }
-
-    .flow {
-      position: absolute;
-      inset: auto 5% 4% 5%;
-      height: 180px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--accent) 32%, transparent), color-mix(in oklch, var(--terra) 18%, transparent), transparent);
-      filter: blur(24px);
-      animation: flow 8s ease-in-out infinite alternate;
-      pointer-events: none;
-    }
-
-    @keyframes flow {
-      from { transform: translateX(-10%) scaleX(.8); opacity: .45; }
-      to { transform: translateX(10%) scaleX(1.08); opacity: .85; }
-    }
-
-    .phone {
-      width: 390px;
-      height: 844px;
-      padding: 12px;
-      border-radius: 56px;
-      background: linear-gradient(150deg, #262832, #0d1018);
-      box-shadow: 0 26px 70px rgba(15, 23, 41, .28), inset 0 0 0 2px #05060a;
-      position: relative;
-      z-index: 1;
-    }
-
-    .android-phone {
-      width: 412px;
-      height: 900px;
-      border-radius: 38px;
-      padding: 10px;
-      background: linear-gradient(150deg, #273040, #0d111c);
-    }
-
-    .screen {
-      height: 100%;
-      overflow: hidden;
-      border-radius: 44px;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    .android-phone .screen { border-radius: 30px; }
-
-    .island {
-      position: absolute;
-      top: 22px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 124px;
-      height: 36px;
-      background: #000;
-      border-radius: 999px;
-      z-index: 4;
-    }
-
-    .hole {
-      position: absolute;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #05060a;
-      z-index: 4;
-    }
-
-    .statusbar {
-      height: 48px;
-      padding: 17px 26px 0;
-      display: flex;
-      justify-content: space-between;
-      color: var(--fg);
-      font-size: 15px;
-      font-weight: 700;
-      flex: 0 0 auto;
-    }
-
-    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
-    .statusbar svg { width: 17px; height: 11px; fill: currentColor; }
-    .battery { width: 25px !important; }
-
-    .content {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 8px 20px 22px;
-      scroll-behavior: smooth;
-    }
-
-    .content::-webkit-scrollbar { display: none; }
-
-    .home-indicator {
-      height: 28px;
-      position: relative;
-      flex: 0 0 auto;
-    }
-
-    .home-indicator::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      bottom: 8px;
-      transform: translateX(-50%);
-      width: 134px;
-      height: 5px;
-      border-radius: 999px;
-      background: var(--fg);
-      opacity: .86;
-    }
-
-    .android-nav {
-      height: 28px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 28px;
-      flex: 0 0 auto;
-    }
-
-    .android-nav span {
-      width: 18px;
-      height: 4px;
-      border-radius: 999px;
-      background: color-mix(in oklch, var(--fg) 76%, transparent);
-    }
-
-    .app-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .greeting { margin: 0 0 4px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
-    .app-head h2 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: calc(31px * var(--ui-scale));
-      line-height: 1.02;
-      font-weight: 600;
-    }
-
-    .icon-btn {
-      width: 46px;
-      height: 46px;
-      border: 1px solid var(--border);
-      border-radius: 50%;
-      background: var(--surface);
-      color: var(--fg);
-      display: grid;
-      place-items: center;
-      flex: 0 0 auto;
-    }
-
-    .icon-btn svg, .tab svg, .small-icon {
-      width: 21px;
-      height: 21px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.55;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .hero-card {
-      padding: 18px;
-      border-radius: 26px;
-      background: var(--dark);
-      color: var(--bg);
-      overflow: hidden;
-      position: relative;
-      margin-bottom: 18px;
-    }
-
-    .hero-card::before {
-      content: "";
-      position: absolute;
-      width: 220px;
-      height: 220px;
-      right: -86px;
-      top: -96px;
-      border-radius: 50%;
-      background: color-mix(in oklch, var(--accent) 34%, transparent);
-      animation: pulse 4.8s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      50% { transform: translate(-12px, 18px) scale(1.08); opacity: .75; }
-    }
-
-    .hero-card > * { position: relative; }
-    .eyebrow {
-      margin: 0 0 8px;
-      color: color-mix(in oklch, var(--accent) 82%, white);
-      font: 700 11px/1 var(--font-mono);
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
-
-    .sermon-title {
-      margin: 0 0 8px;
-      max-width: 13ch;
-      font-family: var(--font-display);
-      font-size: calc(27px * var(--ui-scale));
-      line-height: 1.05;
-      font-weight: 600;
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: calc(12px * var(--ui-scale));
-      font-family: var(--font-mono);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .hero-card .meta { color: color-mix(in oklch, var(--bg) 70%, transparent); }
-
-    .player {
-      display: grid;
-      grid-template-columns: 48px 1fr;
-      gap: 12px;
-      align-items: center;
-      margin-top: 16px;
-    }
-
-    .play {
-      width: 48px;
-      height: 48px;
-      border: 0;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: var(--bg);
-      color: var(--dark);
-    }
-
-    .bar {
-      height: 7px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.24);
-      overflow: hidden;
-    }
-
-    .bar span {
-      display: block;
-      height: 100%;
-      width: 42%;
-      background: var(--accent);
-      border-radius: inherit;
-    }
-
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 18px 0 10px;
-    }
-
-    .section-head h3 {
-      margin: 0;
-      font-size: calc(20px * var(--ui-scale));
-      font-family: var(--font-display);
-      font-weight: 600;
-    }
-
-    .see-all {
-      border: 0;
-      background: transparent;
-      color: var(--terra);
-      font-weight: 700;
-      min-height: 44px;
-      padding: 0 2px;
-    }
-
-    .sermon-row {
-      display: grid;
-      grid-template-columns: 58px 1fr;
-      gap: 12px;
-      align-items: center;
-      min-height: 78px;
-      padding: 12px 0;
-      border-top: 1px solid var(--border);
-    }
-
-    .cover {
-      width: 58px;
-      height: 58px;
-      border-radius: 16px;
-      background:
-        linear-gradient(135deg, color-mix(in oklch, var(--accent) 42%, var(--bg)), color-mix(in oklch, var(--terra) 22%, var(--surface)));
-      border: 1px solid color-mix(in oklch, var(--accent) 28%, transparent);
-      position: relative;
-    }
-
-    .cover::after {
-      content: "";
-      position: absolute;
-      inset: 16px 18px;
-      border-block: 1.5px solid color-mix(in oklch, var(--fg) 70%, transparent);
-    }
-
-    .row-title { font-weight: 700; font-size: calc(15px * var(--ui-scale)); line-height: 1.22; }
-    .row-sub { margin-top: 3px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
-
-    .topic-row {
-      display: flex;
-      gap: 8px;
-      overflow: hidden;
-      margin-bottom: 4px;
-    }
-
-    .chip {
-      min-height: 44px;
-      white-space: nowrap;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--fg);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: calc(13px * var(--ui-scale));
-    }
-
-    .chip.active {
-      background: color-mix(in oklch, var(--accent) 26%, var(--surface));
-      border-color: color-mix(in oklch, var(--accent) 46%, var(--border));
-    }
-
-    .tabbar {
-      height: 70px;
-      padding: 6px 10px 0;
-      border-top: 1px solid var(--border);
-      background: color-mix(in oklch, var(--surface) 92%, transparent);
-      backdrop-filter: blur(18px);
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      flex: 0 0 auto;
-    }
-
-    .tab {
-      border: 0;
-      background: transparent;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      min-height: 58px;
-      color: var(--muted);
-      font-size: 10px;
-    }
-
-    .tab.active { color: var(--terra); font-weight: 700; }
-
-    .detail-cover {
-      height: 220px;
-      border-radius: 28px;
-      padding: 18px;
-      background:
-        radial-gradient(circle at 70% 22%, color-mix(in oklch, var(--accent) 56%, transparent), transparent 34%),
-        linear-gradient(155deg, var(--dark), #243250);
-      color: var(--bg);
-      display: flex;
-      flex-direction: column;
-      justify-content: end;
-      margin-bottom: 14px;
-    }
-
-    .detail-title {
-      margin: 0 0 6px;
-      font-family: var(--font-display);
-      font-size: calc(30px * var(--ui-scale));
-      line-height: 1.03;
-      font-weight: 600;
-    }
-
-    .player-sheet {
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      background: var(--surface);
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-
-    .light-bar {
-      height: 7px;
-      border-radius: 999px;
-      background: color-mix(in oklch, var(--muted) 20%, transparent);
-      overflow: hidden;
-    }
-
-    .light-bar span { display: block; width: 36%; height: 100%; background: var(--terra); }
-
-    .mode-tabs {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      padding: 4px;
-      border-radius: 16px;
-      background: color-mix(in oklch, var(--muted) 12%, transparent);
-      margin: 12px 0;
-    }
-
-    .mode-tabs button {
-      min-height: 44px;
-      border: 0;
-      border-radius: 13px;
-      background: transparent;
-      color: var(--muted);
-      font-size: calc(13px * var(--ui-scale));
-    }
-
-    .mode-tabs button.active {
-      background: var(--surface);
-      color: var(--fg);
-      font-weight: 700;
-    }
-
-    .transcript {
-      display: grid;
-      gap: 8px;
-      font-size: calc(16px * var(--ui-scale));
-      line-height: 1.55;
-    }
-
-    .phrase {
-      border: 0;
-      text-align: start;
-      padding: 10px 12px;
-      min-height: 48px;
-      border-radius: 14px;
-      background: transparent;
-      color: var(--fg);
-    }
-
-    .phrase.active {
-      background: color-mix(in oklch, var(--accent) 32%, var(--surface));
-      box-shadow: inset 3px 0 0 var(--terra);
-    }
-
-    .reference {
-      color: var(--terra);
-      font-weight: 800;
-      text-decoration: none;
-    }
-
-    .search-box {
-      height: 52px;
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      background: var(--surface);
-      display: grid;
-      grid-template-columns: 24px 1fr;
-      gap: 10px;
-      align-items: center;
-      padding: 0 14px;
-      margin-bottom: 14px;
-    }
-
-    .search-box input {
-      border: 0;
-      outline: 0;
-      background: transparent;
-      color: var(--fg);
-      min-width: 0;
-      font-size: calc(16px * var(--ui-scale));
-    }
-
-    .result-card, .chat-card {
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      background: var(--surface);
-      padding: 14px;
-      margin-bottom: 10px;
-    }
-
-    .result-card button {
-      width: 100%;
-      border: 0;
-      background: transparent;
-      color: inherit;
-      text-align: start;
-      padding: 0;
-      min-height: 54px;
-    }
-
-    mark {
-      background: color-mix(in oklch, var(--accent) 42%, transparent);
-      color: var(--fg);
-      border-radius: 4px;
-      padding: 0 2px;
-    }
-
-    .chat-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .bubble {
-      max-width: 86%;
-      padding: 11px 13px;
-      border-radius: 18px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      font-size: calc(14px * var(--ui-scale));
-    }
-
-    .bubble.me {
-      justify-self: end;
-      background: color-mix(in oklch, var(--accent) 34%, var(--surface));
-      border-color: color-mix(in oklch, var(--accent) 42%, var(--border));
-    }
-
-    .composer {
-      display: grid;
-      grid-template-columns: 1fr 46px;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .composer input {
-      min-height: 46px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 0 14px;
-      background: var(--surface);
-      color: var(--fg);
-    }
-
-    .send {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      border: 0;
-      background: var(--terra);
-      color: white;
-      display: grid;
-      place-items: center;
-    }
-
-    [data-ios-screen], [data-android-screen] { display: none; }
-    [data-ios-screen].active, [data-android-screen].active { display: block; }
-
-    @media (max-width: 980px) {
-      .topbar, .stage { grid-template-columns: 1fr; }
-      .controls { width: 100%; }
-      .device-row { min-height: auto; padding: 24px 0; }
-      .shell { padding-inline: 16px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover">
+<title>Слово+ | Вифания · Пальма</title>
+<meta name="description" content="Проповеди евангельской церкви Вифания · Пальма в Сочи. Слушай, читай, обсуждай.">
+<meta name="theme-color" content="#C97B4A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Слово+">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+
+<style>
+/* ============================================================
+   СЛОВО+ для Вифания · Пальма
+   Брендинг: шоколадная палитра + пальмы
+   Архитектура: PWA с Firebase + Internet Archive
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Брендбук Вифания · Пальма */
+  --caramel: #C97B4A;
+  --cappuccino: #D4B896;
+  --chocolate: #3D2818;
+  --cream: #F5EDE0;
+  --cream-warm: #FAF5EC;
+  --milk-coffee: #8B5A3C;
+  --eucalyptus: #5C7560;
+
+  /* Семантические токены — светлая тема */
+  --bg: var(--cream);
+  --surface: #FFFFFF;
+  --fg: var(--chocolate);
+  --muted: var(--milk-coffee);
+  --border: rgba(61, 40, 24, 0.12);
+  --accent: var(--caramel);
+  --accent-soft: rgba(201, 123, 74, 0.14);
+  --terra: var(--milk-coffee);
+  --dark: var(--chocolate);
+  --success: #5C7560;
+  --danger: #B85450;
+
+  --font-display: 'Cormorant Garamond', 'Georgia', serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --ui-scale: 1;
+  --radius: 22px;
+  --radius-sm: 14px;
+  --radius-lg: 28px;
+}
+
+/* Тёмная тема */
+[data-theme="dark"] {
+  --bg: #1E120A;
+  --surface: #2A1A0F;
+  --fg: var(--cream);
+  --muted: #D4B896;
+  --border: rgba(245, 237, 224, 0.12);
+  --accent-soft: rgba(201, 123, 74, 0.22);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+
+/* ====================== APP CONTAINER ====================== */
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-top: env(safe-area-inset-top);
+}
+
+/* На широких экранах — добавим рамку как у телефона */
+@media (min-width: 600px) {
+  .app {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-radius: 32px;
+    box-shadow: 0 30px 80px rgba(61, 40, 24, 0.18);
+    min-height: calc(100vh - 40px);
+    min-height: calc(100dvh - 40px);
+    overflow: hidden;
+  }
+}
+
+/* ====================== HEADER ====================== */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: calc(20px * var(--ui-scale));
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+
+.brand .dot { color: var(--accent); margin: 0 4px; }
+.brand-sub { display: block; font-family: var(--font-body); font-size: calc(10px * var(--ui-scale)); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+.icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn .icon-sun { display: block; }
+.icon-btn .icon-moon { display: none; }
+[data-theme="dark"] .icon-btn .icon-sun { display: none; }
+[data-theme="dark"] .icon-btn .icon-moon { display: block; }
+
+/* ====================== MAIN CONTENT ====================== */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 100px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.screen { display: none; padding-top: 16px; animation: fadeIn 0.3s ease; }
+.screen.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ====================== HOME SCREEN ====================== */
+.greeting-block { margin-bottom: 20px; }
+.greeting {
+  font-size: calc(13px * var(--ui-scale));
+  color: var(--muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+.greeting-title {
+  font-family: var(--font-display);
+  font-size: calc(34px * var(--ui-scale));
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.greeting-title em { font-style: italic; color: var(--accent); }
+
+/* Hero card — последняя проповедь */
+.hero-card {
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--chocolate) 0%, var(--milk-coffee) 100%);
+  color: var(--cream);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 24px;
+  min-height: 200px;
+}
+
+.hero-card::before {
+  content: "";
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  right: -100px;
+  top: -120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 184, 150, 0.4) 0%, transparent 70%);
+  animation: pulse 5s ease-in-out infinite;
+}
+
+/* Декоративная пальма в hero */
+.hero-palm {
+  position: absolute;
+  right: -20px;
+  bottom: -20px;
+  width: 140px;
+  height: 180px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.08); opacity: 0.9; }
+}
+
+.hero-card > * { position: relative; z-index: 1; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--ui-scale));
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cappuccino);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.sermon-title {
+  font-family: var(--font-display);
+  font-size: calc(28px * var(--ui-scale));
+  line-height: 1.08;
+  font-weight: 700;
+  margin-bottom: 8px;
+  max-width: 14ch;
+}
+
+.meta {
+  color: rgba(245, 237, 224, 0.75);
+  font-size: calc(12px * var(--ui-scale));
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.player-row {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 14px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.play-btn {
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--cream);
+  color: var(--chocolate);
+  transition: transform 0.2s ease;
+}
+.play-btn:hover { transform: scale(1.08); }
+.play-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+.progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(245, 237, 224, 0.25);
+  overflow: hidden;
+}
+.progress-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+/* Section heading */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 28px 0 12px;
+}
+.section-head h3 {
+  font-family: var(--font-display);
+  font-size: calc(22px * var(--ui-scale));
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+.see-all {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: calc(13px * var(--ui-scale));
+  padding: 4px 0;
+}
+
+/* Topic chips */
+.topic-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.topic-row::-webkit-scrollbar { display: none; }
+
+.chip {
+  min-height: 38px;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: calc(13px * var(--ui-scale));
+  font-weight: 500;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.chip.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* Sermon rows */
+.sermon-list { margin-top: 8px; }
+
+.sermon-row {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.sermon-row:hover { opacity: 0.7; }
+.sermon-row:last-child { border-bottom: 0; }
+
+.cover {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--cappuccino) 0%, var(--caramel) 100%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.cover::after {
+  content: "";
+  position: absolute;
+  inset: 18px 22px;
+  border-block: 1.5px solid rgba(61, 40, 24, 0.5);
+}
+.cover img { width: 100%; height: 100%; object-fit: cover; }
+
+.row-title {
+  font-weight: 600;
+  font-size: calc(15px * var(--ui-scale));
+  line-height: 1.25;
+  color: var(--fg);
+  margin-bottom: 3px;
+}
+.row-sub {
+  color: var(--muted);
+  font-size: calc(13px * var(--ui-scale));
+  line-height: 1.3;
+}
+.row-meta {
+  color: var(--muted);
+  font-size: calc(11px * var(--ui-scale));
+  font-family: var(--font-mono);
+  margin-top: 4px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.delete-btn {
+  display: none;
+  border: 0;
+  background: transparent;
+  color: var(--danger);
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+body.is-admin .delete-btn { display: inline-block; }
+.delete-btn:hover { background: rgba(184, 84, 80, 0.1); }
+
+/* ====================== PLAYER SCREEN ====================== */
+.detail-cover {
+  height: 240px;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  background:
+    radial-gradient(circle at 75% 25%, rgba(212, 184, 150, 0.6), transparent 50%),
+    linear-gradient(155deg, var(--chocolate) 0%, var(--milk-coffee) 100%);
+  color: var(--cream);
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.detail-cover .hero-palm {
+  right: -10px;
+  bottom: -10px;
+  opacity: 0.2;
+}
+
+.detail-title {
+  font-family: var(--font-display);
+  font-size: calc(30px * var(--ui-scale));
+  line-height: 1.05;
+  font-weight: 700;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.detail-cover .meta { position: relative; z-index: 1; }
+
+.player-sheet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.light-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  overflow: hidden;
+  margin: 14px 0 10px;
+}
+.light-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  width: 36%;
+  transition: width 0.3s ease;
+}
+
+.player-controls {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 14px;
+}
+.player-controls .chip { justify-content: center; text-align: center; padding: 8px 4px; }
+
+.mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  margin: 16px 0;
+}
+.mode-tabs button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--muted);
+  font-size: calc(13px * var(--ui-scale));
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.mode-tabs button.active {
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(61, 40, 24, 0.08);
+}
+
+/* ====================== TRANSCRIPT (Караоке) ====================== */
+.transcript {
+  display: grid;
+  gap: 6px;
+  font-size: calc(16px * var(--ui-scale));
+  line-height: 1.6;
+}
+
+.phrase {
+  border: 0;
+  text-align: start;
+  padding: 12px 14px;
+  min-height: 48px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg);
+  width: 100%;
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.phrase.active {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-weight: 500;
+}
+
+.reference {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ====================== SEARCH ====================== */
+.search-box {
+  height: 52px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.search-box input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--fg);
+  min-width: 0;
+  font-size: calc(16px * var(--ui-scale));
+}
+
+.search-box svg { width: 20px; height: 20px; stroke: var(--muted); fill: none; stroke-width: 2; }
+
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+.result-card:hover { border-color: var(--accent); }
+
+mark {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+/* ====================== CHAT ====================== */
+.chat-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.chat-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  min-height: 280px;
+}
+
+.bubble {
+  max-width: 86%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: calc(14px * var(--ui-scale));
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.bubble strong {
+  display: block;
+  font-size: calc(12px * var(--ui-scale));
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.bubble.me {
+  justify-self: end;
+  background: var(--accent-soft);
+  border-color: rgba(201, 123, 74, 0.3);
+}
+
+.composer {
+  display: grid;
+  grid-template-columns: 1fr 48px;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.composer input {
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 18px;
+  background: var(--surface);
+  color: var(--fg);
+  outline: none;
+}
+.composer input:focus { border-color: var(--accent); }
+
+.send {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent);
+  color: white;
+  display: grid;
+  place-items: center;
+}
+.send svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ====================== BOTTOM TABBAR ====================== */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: 76px;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+@media (min-width: 600px) {
+  .tabbar {
+    position: sticky;
+    border-radius: 0 0 32px 32px;
+  }
+}
+
+.tab {
+  border: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+.tab.active { color: var(--accent); font-weight: 700; }
+.tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ====================== ADMIN ====================== */
+.admin-panel {
+  display: none;
+  margin: 20px 0;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+}
+body.is-admin .admin-panel { display: block; }
+
+.admin-panel h3 {
+  font-family: var(--font-display);
+  font-size: calc(20px * var(--ui-scale));
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.admin-form { display: flex; flex-direction: column; gap: 10px; }
+
+.admin-form label {
+  font-size: calc(11px * var(--ui-scale));
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-form input, .admin-form select, .admin-form textarea {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-size: calc(14px * var(--ui-scale));
+  font-family: inherit;
+}
+.admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus { border-color: var(--accent); }
+
+.admin-form .hint {
+  font-size: calc(11px * var(--ui-scale));
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.admin-form .btn-primary {
+  background: var(--accent);
+  color: white;
+  border: 0;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  margin-top: 8px;
+  font-size: calc(14px * var(--ui-scale));
+}
+.admin-form .btn-primary:hover { background: var(--milk-coffee); }
+.admin-form .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.upload-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
+.upload-zone .ph { font-size: 32px; opacity: 0.4; margin-bottom: 8px; }
+
+.upload-progress {
+  display: none;
+  margin-top: 12px;
+}
+.upload-progress.show { display: block; }
+.upload-progress .progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  overflow: hidden;
+}
+.upload-progress .progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+.upload-progress .status {
+  font-size: calc(12px * var(--ui-scale));
+  color: var(--accent);
+  margin-top: 6px;
+}
+
+.admin-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+.admin-logout {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--danger);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: calc(13px * var(--ui-scale));
+}
+
+/* ====================== MODAL ====================== */
+.modal-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(61, 40, 24, 0.6);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-bg.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  border: 1px solid var(--border);
+}
+
+.modal h2 {
+  font-family: var(--font-display);
+  font-size: calc(24px * var(--ui-scale));
+  margin-bottom: 14px;
+  color: var(--fg);
+}
+
+.modal input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  margin-bottom: 10px;
+  font-size: calc(15px * var(--ui-scale));
+}
+.modal input:focus { border-color: var(--accent); }
+
+.modal-actions { display: flex; gap: 8px; margin-top: 6px; }
+
+.modal-actions button {
+  flex: 1;
+  border: 0;
+  padding: 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: calc(14px * var(--ui-scale));
+}
+
+.btn-primary { background: var(--accent); color: white; }
+.btn-secondary { background: var(--accent-soft); color: var(--fg); }
+
+.modal-err {
+  display: none;
+  color: var(--danger);
+  font-size: calc(13px * var(--ui-scale));
+  margin-bottom: 8px;
+}
+.modal-err.show { display: block; }
+
+/* ====================== TOAST ====================== */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--chocolate);
+  color: var(--cream);
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 300;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 90%;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+/* ====================== UI SCALE PANEL ====================== */
+.scale-panel {
+  display: none;
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  z-index: 60;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(61, 40, 24, 0.15);
+  min-width: 200px;
+}
+.scale-panel.open { display: block; }
+
+.scale-panel label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.scale-panel input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.scale-panel .value {
+  font-weight: 700;
+  color: var(--accent);
+  margin-left: 6px;
+}
+
+/* ====================== USER AUTH ====================== */
+.user-info {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+.user-info.show { display: flex; }
+
+.user-info .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.user-info .name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-info .logout-btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+</style>
 </head>
+
 <body>
-  <div class="shell">
-    <header class="topbar">
-      <div>
-        <p class="kicker">High-fidelity mobile prototype</p>
-        <h1>Слово+ для слушателей</h1>
-        <p class="subhead">Два платформенных макета: iOS показывает ленту, плеер и синхронный транскрипт; Android показывает поиск по смыслу, библейские ссылки и новый чат общины.</p>
-      </div>
-      <div class="controls" aria-label="Настройки доступности прототипа">
-        <div class="control-label"><span>Крупность интерфейса</span><strong id="scaleLabel">100%</strong></div>
-        <input id="scaleRange" type="range" min="100" max="130" value="100" step="5" />
-        <div class="control-label"><span>Flow-анимация</span><strong>мягкая</strong></div>
-      </div>
-    </header>
+<div class="app">
 
-    <main class="stage">
-      <section>
-        <div class="panel-title">
-          <strong>iOS: слушать и читать</strong>
-          <div class="segmented" data-target="ios">
-            <button class="active" data-screen="home">Лента</button>
-            <button data-screen="sermon">Плеер</button>
-            <button data-screen="transcript">Караоке</button>
-          </div>
-        </div>
-        <div class="device-row">
-          <span class="flow" aria-hidden="true"></span>
-          <div class="phone" data-od-id="ios-device">
-            <span class="island" aria-hidden="true"></span>
-            <div class="screen">
-              <div class="statusbar">
-                <span class="num">9:41</span>
-                <span class="right">
-                  <svg viewBox="0 0 17 11" aria-hidden="true"><rect x="0" y="7" width="3" height="4" rx=".6"/><rect x="4" y="5" width="3" height="6" rx=".6"/><rect x="8" y="3" width="3" height="8" rx=".6"/><rect x="12" y="0" width="3" height="11" rx=".6"/></svg>
-                  <svg viewBox="0 0 17 11" aria-hidden="true"><path d="M8.5 1.5C5.5 1.5 2.7 2.6.5 4.6L2 6.1c1.8-1.6 4.1-2.5 6.5-2.5s4.7.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6 5 9.1c1-.9 2.2-1.4 3.5-1.4S11 8.2 12 9.1l1.5-1.5c-1.4-1.3-3.1-2-5-2s-3.6.7-5 2z"/></svg>
-                  <svg class="battery" viewBox="0 0 25 11" aria-hidden="true"><rect x=".5" y=".5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".45"/><rect x="22" y="3.5" width="1.5" height="4" rx=".4"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
-                </span>
-              </div>
-
-              <main class="content" data-od-id="ios-content">
-                <section data-ios-screen="home" class="active" data-od-id="home-feed">
-                  <div class="app-head">
-                    <div>
-                      <p class="greeting">Доброе утро, Анна</p>
-                      <h2>Продолжить слушать</h2>
-                    </div>
-                    <button class="icon-btn" aria-label="Настройки">
-                      <svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg>
-                    </button>
-                  </div>
-                  <article class="hero-card">
-                    <p class="eyebrow">Караоке-режим включён</p>
-                    <h3 class="sermon-title">Надежда, которая не стыдит</h3>
-                    <p class="meta">прот. Андрей Лебедев · 31 мин · Рим 5:1–5</p>
-                    <div class="player">
-                      <button class="play js-play" aria-label="Воспроизвести">
-                        <svg class="small-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                      </button>
-                      <div>
-                        <div class="bar"><span></span></div>
-                        <p class="meta" style="margin: 6px 0 0;">12:48 / 31:04</p>
-                      </div>
-                    </div>
-                  </article>
-
-                  <div class="section-head">
-                    <h3>Темы недели</h3>
-                    <button class="see-all">Все</button>
-                  </div>
-                  <div class="topic-row">
-                    <button class="chip active">Надежда</button>
-                    <button class="chip">Молитва</button>
-                    <button class="chip">Семья</button>
-                  </div>
-
-                  <div class="section-head">
-                    <h3>Новое от авторов</h3>
-                    <button class="see-all js-open-sermon">Открыть</button>
-                  </div>
-                  <div class="sermon-row">
-                    <div class="cover"></div>
-                    <div>
-                      <div class="row-title">Слова, которые возвращают мир</div>
-                      <div class="row-sub">пастор Михаил Орлов · Церковь «Источник»</div>
-                      <div class="meta">42 мин · Прощение</div>
-                    </div>
-                  </div>
-                  <div class="sermon-row">
-                    <div class="cover"></div>
-                    <div>
-                      <div class="row-title">Мф 5: что значит быть милостивым</div>
-                      <div class="row-sub">о. Сергий Власов · Москва</div>
-                      <div class="meta">28 мин · Толкование Писания</div>
-                    </div>
-                  </div>
-                </section>
-
-                <section data-ios-screen="sermon" data-od-id="sermon-player">
-                  <div class="app-head">
-                    <button class="icon-btn js-ios-home" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-                    <button class="icon-btn" aria-label="В избранное"><svg viewBox="0 0 24 24"><path d="m12 21-7-7a4.5 4.5 0 0 1 6.4-6.4l.6.6.6-.6A4.5 4.5 0 0 1 19 14l-7 7z"/></svg></button>
-                  </div>
-                  <div class="detail-cover">
-                    <p class="eyebrow">Проповедь дня</p>
-                    <h2 class="detail-title">Надежда, которая не стыдит</h2>
-                    <p class="meta">прот. Андрей Лебедев · 18 мая · 12 430 прослушиваний</p>
-                  </div>
-                  <div class="player-sheet">
-                    <div class="row-title">Сейчас: «…скорбь производит терпение»</div>
-                    <div class="light-bar" style="margin: 12px 0 8px;"><span></span></div>
-                    <div style="display:flex; justify-content:space-between;" class="meta"><span>12:48</span><span>31:04</span></div>
-                    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin-top:12px;">
-                      <button class="chip">-15</button>
-                      <button class="chip">0.75×</button>
-                      <button class="chip active js-play">Play</button>
-                      <button class="chip">1.25×</button>
-                      <button class="chip">+15</button>
-                    </div>
-                  </div>
-                  <div class="mode-tabs">
-                    <button>Описание</button>
-                    <button class="active js-open-transcript">Транскрипт</button>
-                    <button>Заметки</button>
-                  </div>
-                  <p style="font-size:calc(16px * var(--ui-scale));">В этой проповеди автор разбирает, как христианская надежда помогает проходить периоды тревоги без ухода от реальности.</p>
-                  <button class="chip js-open-transcript" style="width:100%; justify-content:center; min-height:48px;">Открыть синхронный текст</button>
-                </section>
-
-                <section data-ios-screen="transcript" data-od-id="karaoke-transcript">
-                  <div class="app-head">
-                    <button class="icon-btn js-open-sermon" aria-label="К плееру"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-                    <div>
-                      <p class="greeting">12:48 · Рим 5</p>
-                      <h2>Транскрипт</h2>
-                    </div>
-                    <button class="icon-btn" aria-label="Заметка"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
-                  </div>
-                  <div class="player-sheet">
-                    <div class="row-title">Надежда, которая не стыдит</div>
-                    <div class="light-bar" style="margin-top:12px;"><span id="karaokeBar"></span></div>
-                  </div>
-                  <div class="transcript" id="phrases">
-                    <button class="phrase active">Итак, оправдавшись верою, мы имеем мир с Богом через Господа нашего Иисуса Христа.</button>
-                    <button class="phrase">Апостол Павел говорит не о спокойствии как отсутствии проблем, а о мире как основании.</button>
-                    <button class="phrase">Когда человек держится за <span class="reference">Рим 5:3–4</span>, скорбь перестаёт быть пустой.</button>
-                    <button class="phrase">Она производит терпение, терпение — опытность, а опытность — надежду.</button>
-                    <button class="phrase">Долгое нажатие на фразу создаёт заметку с таймкодом и исходным текстом.</button>
-                  </div>
-                </section>
-              </main>
-
-              <nav class="tabbar" data-od-id="ios-tabbar">
-                <button class="tab active js-ios-home"><svg viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>Лента</button>
-                <button class="tab"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Поиск</button>
-                <button class="tab"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M9 9h6M9 13h6"/></svg>Заметки</button>
-                <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Профиль</button>
-              </nav>
-              <div class="home-indicator" aria-hidden="true"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="panel-title">
-          <strong>Android: найти и обсудить</strong>
-          <div class="segmented" data-target="android">
-            <button class="active" data-screen="search">Поиск</button>
-            <button data-screen="chat">Чат</button>
-          </div>
-        </div>
-        <div class="device-row">
-          <span class="flow" aria-hidden="true"></span>
-          <div class="phone android-phone" data-od-id="android-device">
-            <span class="hole" aria-hidden="true"></span>
-            <div class="screen">
-              <div class="statusbar">
-                <span class="num">9:41</span>
-                <span class="right">
-                  <svg viewBox="0 0 17 11" aria-hidden="true"><rect x="0" y="7" width="3" height="4" rx=".6"/><rect x="4" y="5" width="3" height="6" rx=".6"/><rect x="8" y="3" width="3" height="8" rx=".6"/><rect x="12" y="0" width="3" height="11" rx=".6"/></svg>
-                  <svg class="battery" viewBox="0 0 25 11" aria-hidden="true"><rect x=".5" y=".5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".45"/><rect x="22" y="3.5" width="1.5" height="4" rx=".4"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
-                </span>
-              </div>
-
-              <main class="content" data-od-id="android-content">
-                <section data-android-screen="search" class="active" data-od-id="search-screen">
-                  <div class="app-head">
-                    <div>
-                      <p class="greeting">Поиск по смыслу</p>
-                      <h2>Что хотите найти?</h2>
-                    </div>
-                    <button class="icon-btn js-chat" aria-label="Чат"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></button>
-                  </div>
-                  <label class="search-box">
-                    <svg class="small-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input id="searchInput" value="Мф 5 милостивые" aria-label="Поиск" />
-                  </label>
-                  <div class="topic-row">
-                    <button class="chip active">Проповеди</button>
-                    <button class="chip">Авторы</button>
-                    <button class="chip">Серии</button>
-                    <button class="chip">Заметки</button>
-                  </div>
-                  <div class="section-head">
-                    <h3>Найдено по тексту</h3>
-                    <span class="meta">0.42 сек</span>
-                  </div>
-                  <article class="result-card">
-                    <button class="js-open-sermon">
-                      <div class="row-title">Блаженны милостивые</div>
-                      <div class="row-sub">о. Сергий Власов · Толкование Писания · <mark>Мф 5:7</mark></div>
-                      <p style="margin:8px 0 0;">«...милость начинается не с чувства, а с решения увидеть другого человека...»</p>
-                    </button>
-                  </article>
-                  <article class="result-card">
-                    <button>
-                      <div class="row-title">Когда трудно простить</div>
-                      <div class="row-sub">пастор Михаил Орлов · Прощение</div>
-                      <p style="margin:8px 0 0;">Смысловое совпадение: <mark>милость</mark>, примирение, молитва за обидчика.</p>
-                    </button>
-                  </article>
-                  <div class="result-card" style="background:color-mix(in oklch, var(--accent) 17%, var(--surface));">
-                    <div class="row-title">Библейская ссылка</div>
-                    <p style="margin:6px 0 10px;"><strong>Мф 5:7</strong> — Блаженны милостивые, ибо они помилованы будут.</p>
-                    <button class="chip" style="width:100%; justify-content:center;">Открыть главу в Библии</button>
-                  </div>
-                </section>
-
-                <section data-android-screen="chat" data-od-id="community-chat">
-                  <div class="app-head">
-                    <button class="icon-btn js-search" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-                    <div>
-                      <p class="greeting">Обсуждение проповеди</p>
-                      <h2>Группа «Надежда»</h2>
-                    </div>
-                  </div>
-                  <div class="chat-card">
-                    <div class="row-title">Правила чата</div>
-                    <p style="margin:6px 0 0; color:var(--muted);">Модерация защищает от спама и межконфессиональных споров. Обсуждаем мысль, не спорим о людях.</p>
-                  </div>
-                  <div class="chat-list" id="chatList">
-                    <div class="bubble"><strong>Елена</strong><br>Мне помог фрагмент про «мир как основание». Сохранила заметку на 12:48.</div>
-                    <div class="bubble me">Да, и удобно, что можно открыть Рим 5 прямо из текста.</div>
-                    <div class="bubble"><strong>Модератор</strong><br>Добавила подборку по теме «Надежда» в закреп.</div>
-                  </div>
-                  <div class="composer">
-                    <input id="chatInput" value="Спасибо за ссылку на фрагмент" aria-label="Сообщение" />
-                    <button class="send" id="sendBtn" aria-label="Отправить"><svg class="small-icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg></button>
-                  </div>
-                </section>
-              </main>
-
-              <nav class="tabbar" data-od-id="android-tabbar">
-                <button class="tab"><svg viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>Лента</button>
-                <button class="tab active js-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Поиск</button>
-                <button class="tab js-chat"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>Чат</button>
-                <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Профиль</button>
-              </nav>
-              <div class="android-nav" aria-hidden="true"><span></span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+<!-- ============ HEADER ============ -->
+<header class="app-header">
+  <div class="brand">
+    <span>Слово<span style="color: var(--accent);">+</span></span>
   </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="toggleScalePanel()" aria-label="Размер текста" title="Размер текста">
+      <svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+    </button>
+    <button class="icon-btn" onclick="toggleTheme()" aria-label="Тема" title="Тема">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openAdminModal()" aria-label="Админ" title="Админ" style="font-size: 18px;">⚙</button>
+  </div>
+</header>
 
-  <script>
-    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-      "uiScale": 100
-    }/*EDITMODE-END*/;
+<!-- ============ SCALE PANEL ============ -->
+<div class="scale-panel" id="scalePanel">
+  <label>Размер текста <span class="value" id="scaleValue">100%</span></label>
+  <input type="range" id="scaleRange" min="80" max="160" value="100" step="10">
+</div>
 
-    const root = document.documentElement;
-    const scaleRange = document.getElementById("scaleRange");
-    const scaleLabel = document.getElementById("scaleLabel");
-    scaleRange.addEventListener("input", () => {
-      const value = Number(scaleRange.value);
-      root.style.setProperty("--ui-scale", value / 100);
-      scaleLabel.textContent = value + "%";
-    });
+<!-- ============ MAIN CONTENT ============ -->
+<main class="main">
 
-    function showScreen(kind, name) {
-      const selector = kind === "ios" ? "[data-ios-screen]" : "[data-android-screen]";
-      document.querySelectorAll(selector).forEach((screen) => {
-        screen.classList.toggle("active", screen.dataset[kind + "Screen"] === name);
+  <!-- ===== ЛЕНТА (HOME) ===== -->
+  <section class="screen active" id="screen-home">
+    <div class="greeting-block">
+      <p class="greeting" id="greeting">Доброе утро</p>
+      <h1 class="greeting-title">Дом <em>Божьей</em> любви</h1>
+    </div>
+
+    <div class="user-info" id="userInfo">
+      <div class="avatar" id="userAvatar">А</div>
+      <div>
+        <div class="name" id="userName">Гость</div>
+        <div style="font-size: 11px; color: var(--muted);">Сохраняйте проповеди в избранное</div>
+      </div>
+      <button class="logout-btn" onclick="userLogout()" id="userLogoutBtn">Выйти</button>
+    </div>
+
+    <!-- Hero card -->
+    <article class="hero-card" id="heroCard">
+      <span class="eyebrow">Последняя проповедь</span>
+      <h2 class="sermon-title" id="heroTitle">Корни тянутся вширь</h2>
+      <p class="meta" id="heroMeta">Артур М. · 38 мин · Псалом 91</p>
+      <div class="player-row">
+        <button class="play-btn" onclick="playHero()" aria-label="Воспроизвести">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div>
+          <div class="progress-bar"><span style="width: 0%;"></span></div>
+          <p class="meta" style="margin-top: 8px;" id="heroTime">0:00 / 38:00</p>
+        </div>
+      </div>
+      <!-- Декоративная пальма -->
+      <svg class="hero-palm" viewBox="0 0 140 180" fill="none">
+        <path d="M70 50 C 50 38, 25 35, 5 42 C 28 48, 50 54, 70 55" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 50 C 90 38, 115 35, 135 42 C 112 48, 90 54, 70 55" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 50 C 55 30, 40 12, 30 0 C 50 18, 65 35, 70 52" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 50 C 85 30, 100 12, 110 0 C 90 18, 75 35, 70 52" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 50 C 65 30, 62 8, 65 -10 C 68 12, 70 32, 70 52" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 50 C 75 30, 78 8, 75 -10 C 72 12, 70 32, 70 52" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <rect x="67" y="50" width="6" height="130" fill="currentColor" opacity="0.6"/>
+      </svg>
+    </article>
+
+    <!-- Topics -->
+    <div class="section-head">
+      <h3>Темы</h3>
+    </div>
+    <div class="topic-row">
+      <button class="chip active" onclick="filterByTopic('Все')">Все</button>
+      <button class="chip" onclick="filterByTopic('Пальма')">Серия «Пальма»</button>
+      <button class="chip" onclick="filterByTopic('Молитва')">Молитва</button>
+      <button class="chip" onclick="filterByTopic('Семья')">Семья</button>
+      <button class="chip" onclick="filterByTopic('Свидетельство')">Свидетельства</button>
+    </div>
+
+    <!-- Admin panel: add sermon -->
+    <div class="admin-panel" id="adminPanel">
+      <h3>+ Добавить проповедь</h3>
+      <div class="admin-form">
+        <div>
+          <label>Заголовок</label>
+          <input type="text" id="sermonTitle" placeholder="Корни тянутся вширь">
+        </div>
+        <div>
+          <label>Проповедник</label>
+          <input type="text" id="sermonPreacher" placeholder="Артур М.">
+        </div>
+        <div>
+          <label>Серия / Тема</label>
+          <select id="sermonTopic">
+            <option>Пальма</option>
+            <option>Молитва</option>
+            <option>Семья</option>
+            <option>Свидетельство</option>
+            <option>Другое</option>
+          </select>
+        </div>
+        <div>
+          <label>Длительность</label>
+          <input type="text" id="sermonDuration" placeholder="38 мин">
+        </div>
+
+        <div class="admin-divider"></div>
+        <label>Загрузка аудио в Internet Archive</label>
+        <p class="hint">Введите Internet Archive S3 ключи (можно получить бесплатно на <a href="https://archive.org/account/s3.php" target="_blank" style="color: var(--accent);">archive.org/account/s3.php</a>)</p>
+        <input type="text" id="iaAccessKey" placeholder="Access Key">
+        <input type="password" id="iaSecretKey" placeholder="Secret Key">
+
+        <div class="upload-zone" onclick="document.getElementById('audioFile').click()">
+          <div class="ph">🎵</div>
+          <div id="uploadZoneText">Перетащи MP3 или нажми для выбора</div>
+          <input type="file" id="audioFile" accept="audio/*" style="display:none;" onchange="handleAudioUpload(event)">
+        </div>
+
+        <div class="upload-progress" id="uploadProgress">
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="status" id="uploadStatus">Загружаю...</div>
+        </div>
+
+        <div class="admin-divider"></div>
+        <label>Или вставь готовую ссылку</label>
+        <input type="url" id="sermonUrl" placeholder="https://archive.org/download/...">
+
+        <div>
+          <label>Видео (RuTube / VK / YouTube) — необязательно</label>
+          <input type="url" id="sermonVideoUrl" placeholder="https://rutube.ru/video/...">
+        </div>
+
+        <div>
+          <label>Краткое описание</label>
+          <textarea id="sermonExcerpt" rows="2" placeholder="О чём проповедь — 1-2 предложения"></textarea>
+        </div>
+
+        <button class="btn-primary" onclick="addSermon()">Добавить проповедь</button>
+      </div>
+    </div>
+
+    <!-- Sermons list -->
+    <div class="section-head">
+      <h3>Все проповеди</h3>
+      <span class="see-all" id="sermonsCount"></span>
+    </div>
+    <div class="sermon-list" id="sermonsList">
+      <p style="color: var(--muted); padding: 20px 0; text-align: center; font-size: 14px;">Загружаю проповеди...</p>
+    </div>
+  </section>
+
+  <!-- ===== ПЛЕЕР ===== -->
+  <section class="screen" id="screen-player">
+    <div style="margin-bottom: 16px;">
+      <button class="icon-btn" onclick="showScreen('home')" aria-label="Назад">
+        <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="detail-cover">
+      <span class="eyebrow">Проповедь</span>
+      <h2 class="detail-title" id="playerTitle">Корни тянутся вширь</h2>
+      <p class="meta" id="playerMeta">Артур М. · Серия «Пальма»</p>
+      <svg class="hero-palm" viewBox="0 0 140 180" fill="none">
+        <path d="M70 50 C 50 38, 25 35, 5 42 C 28 48, 50 54, 70 55" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 50 C 90 38, 115 35, 135 42 C 112 48, 90 54, 70 55" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 50 C 55 30, 40 12, 30 0 C 50 18, 65 35, 70 52" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 50 C 85 30, 100 12, 110 0 C 90 18, 75 35, 70 52" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <rect x="67" y="50" width="6" height="130" fill="currentColor" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <!-- Audio element (hidden, controlled by buttons) -->
+    <audio id="audioPlayer" preload="metadata"></audio>
+
+    <div class="player-sheet">
+      <div class="row-title" id="currentPhrase">Нажмите Play, чтобы начать</div>
+      <div class="light-bar"><span id="playerProgressBar"></span></div>
+      <div style="display:flex; justify-content:space-between;" class="meta">
+        <span id="playerCurrentTime">0:00</span>
+        <span id="playerDuration">--:--</span>
+      </div>
+      <div class="player-controls">
+        <button class="chip" onclick="seek(-15)">−15</button>
+        <button class="chip" onclick="setSpeed(0.75)">0.75×</button>
+        <button class="chip active" id="playBtn" onclick="togglePlay()">▶ Play</button>
+        <button class="chip" onclick="setSpeed(1.25)">1.25×</button>
+        <button class="chip" onclick="seek(15)">+15</button>
+      </div>
+    </div>
+
+    <div class="mode-tabs">
+      <button class="active" onclick="setMode('description', this)">Описание</button>
+      <button onclick="setMode('transcript', this)">Транскрипт</button>
+      <button onclick="setMode('notes', this)">Заметки</button>
+    </div>
+
+    <!-- Mode: Description -->
+    <div id="mode-description">
+      <p style="font-size: calc(16px * var(--ui-scale)); line-height: 1.6; color: var(--fg);" id="sermonDescription">
+        Откройте проповедь из ленты, чтобы увидеть описание.
+      </p>
+      <div id="videoEmbed" style="margin-top: 16px;"></div>
+    </div>
+
+    <!-- Mode: Transcript (Караоке) -->
+    <div id="mode-transcript" style="display:none;">
+      <div class="transcript" id="phrasesContainer">
+        <button class="phrase active">Итак, оправдавшись верою, мы имеем мир с Богом через Господа нашего Иисуса Христа.</button>
+        <button class="phrase">Апостол Павел говорит не о спокойствии как отсутствии проблем, а о мире как основании.</button>
+        <button class="phrase">Когда человек держится за <span class="reference">Рим 5:3–4</span>, скорбь перестаёт быть пустой.</button>
+        <button class="phrase">Она производит терпение, терпение — опытность, а опытность — надежду.</button>
+        <button class="phrase">Долгое нажатие на фразу создаёт заметку с таймкодом и исходным текстом.</button>
+      </div>
+
+      <!-- Admin: add transcript -->
+      <div class="admin-panel" style="margin-top: 16px;">
+        <h3>Добавить транскрипт</h3>
+        <div class="admin-form">
+          <p class="hint">Вставьте текст проповеди — каждая фраза с новой строки. Они появятся в караоке-режиме.</p>
+          <textarea id="transcriptInput" rows="6" placeholder="Каждое предложение — новая строка..."></textarea>
+          <button class="btn-primary" onclick="saveTranscript()">Сохранить транскрипт</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode: Notes -->
+    <div id="mode-notes" style="display:none;">
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 12px;">Долгое нажатие на фразу транскрипта добавит её сюда с таймкодом.</p>
+      <div id="notesList">
+        <p style="color: var(--muted); font-size: 13px;">Пока нет заметок</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ПОИСК ===== -->
+  <section class="screen" id="screen-search">
+    <div class="greeting-block">
+      <p class="greeting">Поиск по смыслу</p>
+      <h1 class="greeting-title">Что хотите <em>найти?</em></h1>
+    </div>
+
+    <label class="search-box">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="searchInput" placeholder="Например: милостивые, надежда, Рим 5" oninput="performSearch()">
+    </label>
+
+    <div class="topic-row" style="margin-bottom: 16px;">
+      <button class="chip active">Проповеди</button>
+      <button class="chip">Авторы</button>
+      <button class="chip">Серии</button>
+      <button class="chip">Темы</button>
+    </div>
+
+    <div id="searchResults">
+      <p style="color: var(--muted); text-align: center; padding: 40px 0; font-size: 14px;">Начните вводить запрос</p>
+    </div>
+  </section>
+
+  <!-- ===== ЧАТ ===== -->
+  <section class="screen" id="screen-chat">
+    <div class="greeting-block">
+      <p class="greeting">Обсуждение</p>
+      <h1 class="greeting-title">Группа <em>«Роща»</em></h1>
+    </div>
+
+    <div class="chat-card">
+      <div class="row-title">Правила общения</div>
+      <p style="margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.5;">
+        Здесь мы обсуждаем проповеди, делимся мыслями и поддерживаем друг друга. Будьте добрыми. Обсуждаем мысли, не людей.
+      </p>
+    </div>
+
+    <div id="chatLoginPrompt" style="text-align: center; padding: 30px 0;">
+      <p style="color: var(--muted); margin-bottom: 16px;">Войдите, чтобы участвовать в чате</p>
+      <button class="btn-primary" onclick="openUserAuthModal()" style="padding: 12px 24px; border-radius: 999px; border: 0;">Войти / Регистрация</button>
+    </div>
+
+    <div id="chatContent" style="display:none;">
+      <div class="chat-list" id="chatList"></div>
+      <div class="composer">
+        <input type="text" id="msgInput" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="send" onclick="sendMsg()" aria-label="Отправить">
+          <svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ TABBAR ============ -->
+<nav class="tabbar">
+  <button class="tab active" data-tab="home" onclick="showScreen('home', this)">
+    <svg viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+    Лента
+  </button>
+  <button class="tab" data-tab="search" onclick="showScreen('search', this)">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    Поиск
+  </button>
+  <button class="tab" data-tab="chat" onclick="showScreen('chat', this)">
+    <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+    Чат
+  </button>
+  <button class="tab" data-tab="profile" onclick="openUserAuthModal()">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+    Профиль
+  </button>
+</nav>
+
+<!-- ============ ADMIN LOGIN MODAL ============ -->
+<div class="modal-bg" id="adminModal">
+  <div class="modal">
+    <h2>Вход для админа</h2>
+    <p class="modal-err" id="adminErr">Неверный пароль</p>
+    <input type="password" id="adminPass" placeholder="Пароль" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAdminModal()">Отмена</button>
+      <button class="btn-primary" onclick="checkAdminPass()">Войти</button>
+    </div>
+    <p style="font-size: 11px; color: var(--muted); margin-top: 16px; line-height: 1.4;">
+      Только администраторы могут добавлять проповеди и редактировать контент.
+    </p>
+  </div>
+</div>
+
+<!-- ============ USER AUTH MODAL ============ -->
+<div class="modal-bg" id="userAuthModal">
+  <div class="modal">
+    <h2 id="userAuthTitle">Войти</h2>
+    <p class="modal-err" id="userAuthErr"></p>
+    <input type="text" id="userAuthName" placeholder="Ваше имя" style="display:none;">
+    <input type="email" id="userAuthEmail" placeholder="Email">
+    <input type="password" id="userAuthPass" placeholder="Пароль">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeUserAuthModal()">Закрыть</button>
+      <button class="btn-primary" id="userAuthSubmit" onclick="submitUserAuth()">Войти</button>
+    </div>
+    <p style="font-size: 13px; color: var(--accent); margin-top: 14px; text-align: center; cursor: pointer;" onclick="toggleUserAuthMode()">
+      <span id="userAuthToggle">Нет аккаунта? Зарегистрироваться</span>
+    </p>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastText">Готово</span>
+</div>
+
+</div>
+
+<script>
+/* ============================================================
+   СЛОВО+ для Вифания · Пальма
+   JavaScript: PWA логика + Firebase + Internet Archive
+   ============================================================ */
+
+// ⚠️ ВАЖНО: ЗАМЕНИТЕ это на ваш Firebase config!
+// Получите его на https://console.firebase.google.com — Project Settings
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY_HERE",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.firebasestorage.app",
+  messagingSenderId: "0000000000",
+  appId: "1:0000000000:web:abc123"
+};
+
+// Пароль администратора (можно изменить)
+const ADMIN_PASSWORD = "vifania2026";
+
+// ============ INITIALIZE FIREBASE ============
+let db, auth;
+let firebaseReady = false;
+
+try {
+  if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    firebaseReady = true;
+    console.log("✓ Firebase initialized");
+  } else {
+    console.warn("⚠️ Firebase не настроен. Замените firebaseConfig в коде.");
+  }
+} catch(e) {
+  console.error("Ошибка Firebase:", e);
+}
+
+// ============ STATE ============
+let isAdmin = false;
+let currentUser = null;
+let sermons = [];
+let currentSermon = null;
+let currentFilter = 'Все';
+let userAuthMode = 'login'; // 'login' or 'register'
+
+// ============ THEME ============
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('slovo-theme', next);
+}
+
+const savedTheme = localStorage.getItem('slovo-theme');
+if (savedTheme) {
+  document.documentElement.setAttribute('data-theme', savedTheme);
+} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.setAttribute('data-theme', 'dark');
+}
+
+// ============ UI SCALE (Размер текста) ============
+function toggleScalePanel() {
+  document.getElementById('scalePanel').classList.toggle('open');
+}
+
+const scaleRange = document.getElementById('scaleRange');
+const scaleValue = document.getElementById('scaleValue');
+
+// Загружаем сохранённый размер
+const savedScale = localStorage.getItem('slovo-scale') || '100';
+scaleRange.value = savedScale;
+scaleValue.textContent = savedScale + '%';
+document.documentElement.style.setProperty('--ui-scale', savedScale / 100);
+
+scaleRange.addEventListener('input', () => {
+  const value = scaleRange.value;
+  document.documentElement.style.setProperty('--ui-scale', value / 100);
+  scaleValue.textContent = value + '%';
+  localStorage.setItem('slovo-scale', value);
+});
+
+// Закрытие scale panel при клике вне
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('scalePanel');
+  if (!panel.contains(e.target) && !e.target.closest('[onclick*="toggleScalePanel"]')) {
+    panel.classList.remove('open');
+  }
+});
+
+// ============ NAVIGATION ============
+function showScreen(name, tabBtn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (tabBtn) {
+    tabBtn.classList.add('active');
+  } else {
+    const tabToActivate = document.querySelector(`.tab[data-tab="${name}"]`);
+    if (tabToActivate) tabToActivate.classList.add('active');
+  }
+
+  window.scrollTo(0, 0);
+  document.querySelector('.main').scrollTop = 0;
+}
+
+// ============ GREETING ============
+function updateGreeting() {
+  const hour = new Date().getHours();
+  let greeting = 'Доброе утро';
+  if (hour >= 12 && hour < 17) greeting = 'Добрый день';
+  else if (hour >= 17 && hour < 23) greeting = 'Добрый вечер';
+  else if (hour >= 23 || hour < 6) greeting = 'Доброй ночи';
+  document.getElementById('greeting').textContent = greeting;
+}
+updateGreeting();
+
+// ============ ADMIN AUTH ============
+function openAdminModal() {
+  if (isAdmin) {
+    if (confirm('Вы уже вошли как админ. Выйти из режима админа?')) adminLogout();
+    return;
+  }
+  document.getElementById('adminModal').classList.add('open');
+  document.getElementById('adminErr').classList.remove('show');
+  document.getElementById('adminPass').value = '';
+  setTimeout(() => document.getElementById('adminPass').focus(), 100);
+}
+
+function closeAdminModal() {
+  document.getElementById('adminModal').classList.remove('open');
+}
+
+function checkAdminPass() {
+  const pass = document.getElementById('adminPass').value;
+  if (pass === ADMIN_PASSWORD) {
+    isAdmin = true;
+    document.body.classList.add('is-admin');
+    closeAdminModal();
+    showToast('🔓', 'Режим админа активирован');
+    localStorage.setItem('slovo-admin', '1');
+  } else {
+    document.getElementById('adminErr').classList.add('show');
+    document.getElementById('adminPass').value = '';
+    document.getElementById('adminPass').focus();
+  }
+}
+
+function adminLogout() {
+  isAdmin = false;
+  document.body.classList.remove('is-admin');
+  localStorage.removeItem('slovo-admin');
+  showToast('🔒', 'Вышли из режима админа');
+}
+
+// Восстановить админа из localStorage
+if (localStorage.getItem('slovo-admin') === '1') {
+  isAdmin = true;
+  document.body.classList.add('is-admin');
+}
+
+document.getElementById('adminPass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkAdminPass();
+});
+
+// ============ USER AUTH (для чата) ============
+function openUserAuthModal() {
+  if (currentUser) {
+    if (confirm('Вы уже вошли как ' + (currentUser.displayName || currentUser.email) + '. Выйти?')) userLogout();
+    return;
+  }
+  if (!firebaseReady) {
+    showToast('⚠️', 'Сначала настройте Firebase');
+    return;
+  }
+  document.getElementById('userAuthModal').classList.add('open');
+  setUserAuthMode('login');
+}
+
+function closeUserAuthModal() {
+  document.getElementById('userAuthModal').classList.remove('open');
+}
+
+function setUserAuthMode(mode) {
+  userAuthMode = mode;
+  document.getElementById('userAuthName').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('userAuthTitle').textContent = mode === 'register' ? 'Регистрация' : 'Войти';
+  document.getElementById('userAuthSubmit').textContent = mode === 'register' ? 'Создать аккаунт' : 'Войти';
+  document.getElementById('userAuthToggle').textContent = mode === 'register' ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться';
+  document.getElementById('userAuthErr').classList.remove('show');
+}
+
+function toggleUserAuthMode() {
+  setUserAuthMode(userAuthMode === 'login' ? 'register' : 'login');
+}
+
+async function submitUserAuth() {
+  const email = document.getElementById('userAuthEmail').value.trim();
+  const pass = document.getElementById('userAuthPass').value;
+  const name = document.getElementById('userAuthName').value.trim();
+  const err = document.getElementById('userAuthErr');
+
+  if (!email || !pass) {
+    err.textContent = 'Заполните все поля';
+    err.classList.add('show');
+    return;
+  }
+
+  try {
+    if (userAuthMode === 'register') {
+      if (!name) {
+        err.textContent = 'Введите имя';
+        err.classList.add('show');
+        return;
+      }
+      const cred = await auth.createUserWithEmailAndPassword(email, pass);
+      await cred.user.updateProfile({ displayName: name });
+      await db.collection('users').doc(cred.user.uid).set({
+        name: name,
+        email: email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      document.querySelectorAll(`.segmented[data-target="${kind}"] button`).forEach((button) => {
-        button.classList.toggle("active", button.dataset.screen === name);
-      });
+      showToast('🌴', 'Добро пожаловать в общину!');
+    } else {
+      await auth.signInWithEmailAndPassword(email, pass);
+      showToast('🌴', 'С возвращением!');
     }
+    closeUserAuthModal();
+  } catch (e) {
+    err.textContent = 'Ошибка: ' + e.message;
+    err.classList.add('show');
+  }
+}
 
-    document.querySelectorAll(".segmented button").forEach((button) => {
-      button.addEventListener("click", () => showScreen(button.closest(".segmented").dataset.target, button.dataset.screen));
-    });
-    document.querySelectorAll(".js-open-sermon").forEach((button) => button.addEventListener("click", () => showScreen("ios", "sermon")));
-    document.querySelectorAll(".js-open-transcript").forEach((button) => button.addEventListener("click", () => showScreen("ios", "transcript")));
-    document.querySelectorAll(".js-ios-home").forEach((button) => button.addEventListener("click", () => showScreen("ios", "home")));
-    document.querySelectorAll(".js-chat").forEach((button) => button.addEventListener("click", () => showScreen("android", "chat")));
-    document.querySelectorAll(".js-search").forEach((button) => button.addEventListener("click", () => showScreen("android", "search")));
+function userLogout() {
+  if (!firebaseReady) return;
+  auth.signOut().then(() => {
+    showToast('👋', 'Вышли из аккаунта');
+  });
+}
 
-    const phrases = Array.from(document.querySelectorAll(".phrase"));
-    const karaokeBar = document.getElementById("karaokeBar");
-    let phraseIndex = 0;
-    setInterval(() => {
-      phrases.forEach((phrase, index) => phrase.classList.toggle("active", index === phraseIndex));
-      if (karaokeBar) karaokeBar.style.width = `${22 + phraseIndex * 16}%`;
-      phraseIndex = (phraseIndex + 1) % phrases.length;
-    }, 1800);
-    phrases.forEach((phrase, index) => {
-      phrase.addEventListener("click", () => {
-        phraseIndex = index;
-        phrases.forEach((item, itemIndex) => item.classList.toggle("active", itemIndex === index));
-      });
+// Слушаем изменения авторизации
+if (firebaseReady) {
+  auth.onAuthStateChanged(user => {
+    currentUser = user;
+    const userInfo = document.getElementById('userInfo');
+    const chatLogin = document.getElementById('chatLoginPrompt');
+    const chatContent = document.getElementById('chatContent');
+
+    if (user) {
+      const name = user.displayName || user.email.split('@')[0];
+      document.getElementById('userName').textContent = name;
+      document.getElementById('userAvatar').textContent = name[0].toUpperCase();
+      userInfo.classList.add('show');
+      chatLogin.style.display = 'none';
+      chatContent.style.display = 'block';
+      loadChatMessages();
+    } else {
+      userInfo.classList.remove('show');
+      chatLogin.style.display = 'block';
+      chatContent.style.display = 'none';
+    }
+  });
+}
+
+// ============ FIRESTORE: SERMONS ============
+async function loadSermons() {
+  if (!firebaseReady) {
+    document.getElementById('sermonsList').innerHTML = `
+      <div style="padding: 20px; background: var(--accent-soft); border-radius: var(--radius); text-align: center;">
+        <p style="font-weight: 600; margin-bottom: 8px;">⚠️ Firebase не настроен</p>
+        <p style="font-size: 13px; color: var(--muted); line-height: 1.5;">Зарегистрируйтесь на firebase.google.com, создайте проект и вставьте конфиг в код (строка с firebaseConfig).</p>
+      </div>`;
+    return;
+  }
+
+  try {
+    const snap = await db.collection('sermons').orderBy('createdAt', 'desc').get();
+    sermons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderSermons();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('sermonsList').innerHTML = `<p style="color: var(--danger); padding: 20px 0;">Ошибка загрузки: ${e.message}</p>`;
+  }
+}
+
+function renderSermons() {
+  const container = document.getElementById('sermonsList');
+  let filtered = currentFilter === 'Все' ? sermons : sermons.filter(s => s.topic === currentFilter);
+
+  document.getElementById('sermonsCount').textContent = filtered.length + ' шт.';
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<p style="color: var(--muted); padding: 20px 0; text-align: center; font-size: 14px;">Пока нет проповедей. ${isAdmin ? 'Добавьте первую через форму выше!' : ''}</p>`;
+    return;
+  }
+
+  // Обновим hero card первой проповедью
+  if (sermons.length > 0) {
+    const latest = sermons[0];
+    document.getElementById('heroTitle').textContent = latest.title;
+    document.getElementById('heroMeta').textContent = `${latest.preacher || ''} · ${latest.duration || ''} · ${latest.topic || ''}`;
+    document.getElementById('heroCard').onclick = () => openPlayer(latest);
+  }
+
+  container.innerHTML = filtered.map(s => `
+    <div class="sermon-row" onclick="openPlayer(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+      <div class="cover"></div>
+      <div>
+        <div class="row-title">${escapeHtml(s.title)}</div>
+        <div class="row-sub">${escapeHtml(s.preacher || '')} ${s.topic ? '· ' + escapeHtml(s.topic) : ''}</div>
+        <div class="row-meta">${escapeHtml(s.duration || '')}</div>
+      </div>
+      <div class="row-actions">
+        <button class="delete-btn" onclick="event.stopPropagation(); deleteSermon('${s.id}')" title="Удалить">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterByTopic(topic) {
+  currentFilter = topic;
+  document.querySelectorAll('.topic-row .chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  renderSermons();
+}
+
+async function addSermon() {
+  if (!firebaseReady) {
+    showToast('⚠️', 'Firebase не настроен');
+    return;
+  }
+  const title = document.getElementById('sermonTitle').value.trim();
+  const url = document.getElementById('sermonUrl').value.trim();
+  if (!title) {
+    showToast('⚠️', 'Введите название');
+    return;
+  }
+  if (!url) {
+    showToast('⚠️', 'Загрузите аудио или вставьте ссылку');
+    return;
+  }
+
+  try {
+    await db.collection('sermons').add({
+      title,
+      preacher: document.getElementById('sermonPreacher').value.trim(),
+      topic: document.getElementById('sermonTopic').value,
+      duration: document.getElementById('sermonDuration').value.trim(),
+      url: url,
+      videoUrl: document.getElementById('sermonVideoUrl').value.trim(),
+      excerpt: document.getElementById('sermonExcerpt').value.trim(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('✓', 'Проповедь добавлена');
+    document.querySelectorAll('#adminPanel input, #adminPanel textarea').forEach(i => i.value = '');
+    document.getElementById('uploadProgress').classList.remove('show');
+    loadSermons();
+  } catch (e) {
+    showToast('❌', 'Ошибка: ' + e.message);
+  }
+}
+
+async function deleteSermon(id) {
+  if (!confirm('Удалить эту проповедь?')) return;
+  try {
+    await db.collection('sermons').doc(id).delete();
+    showToast('✓', 'Удалено');
+    loadSermons();
+  } catch (e) {
+    showToast('❌', 'Ошибка: ' + e.message);
+  }
+}
+
+// ============ INTERNET ARCHIVE UPLOAD ============
+async function handleAudioUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const access = document.getElementById('iaAccessKey').value.trim();
+  const secret = document.getElementById('iaSecretKey').value.trim();
+
+  if (!access || !secret) {
+    showToast('⚠️', 'Введите ключи Internet Archive');
+    return;
+  }
+
+  document.getElementById('uploadProgress').classList.add('show');
+  const progressBar = document.getElementById('progressBar');
+  const status = document.getElementById('uploadStatus');
+
+  progressBar.style.width = '5%';
+  status.textContent = 'Подготовка...';
+
+  const identifier = 'slovo-vifania-' + Date.now();
+  const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
+  const uploadUrl = `https://s3.us.archive.org/${identifier}/${safeName}`;
+
+  try {
+    status.textContent = 'Загружаю файл в Internet Archive...';
+    progressBar.style.width = '20%';
+
+    const title = document.getElementById('sermonTitle').value || file.name;
+
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `LOW ${access}:${secret}`,
+        'x-archive-meta-mediatype': 'audio',
+        'x-archive-meta-collection': 'opensource_audio',
+        'x-archive-meta-title': encodeURIComponent(title),
+        'x-archive-auto-make-bucket': '1',
+        'Content-Type': file.type || 'audio/mpeg'
+      },
+      body: file
     });
 
-    document.getElementById("sendBtn").addEventListener("click", () => {
-      const input = document.getElementById("chatInput");
-      const value = input.value.trim();
-      if (!value) return;
-      const bubble = document.createElement("div");
-      bubble.className = "bubble me";
-      bubble.textContent = value;
-      document.getElementById("chatList").appendChild(bubble);
-      input.value = "";
+    progressBar.style.width = '90%';
+
+    if (response.ok || response.status === 200) {
+      progressBar.style.width = '100%';
+      const directUrl = `https://archive.org/download/${identifier}/${safeName}`;
+      document.getElementById('sermonUrl').value = directUrl;
+      status.textContent = '✓ Готово! Нажмите "Добавить проповедь"';
+      status.style.color = 'var(--success)';
+      showToast('🎵', 'Файл загружен!');
+    } else {
+      throw new Error('Статус: ' + response.status);
+    }
+  } catch (e) {
+    progressBar.style.width = '0%';
+    status.textContent = '❌ Ошибка: ' + e.message;
+    status.style.color = 'var(--danger)';
+    showToast('❌', 'Ошибка загрузки');
+  }
+}
+
+// ============ PLAYER ============
+const audio = document.getElementById('audioPlayer');
+
+function openPlayer(sermon) {
+  currentSermon = sermon;
+  document.getElementById('playerTitle').textContent = sermon.title;
+  document.getElementById('playerMeta').textContent = `${sermon.preacher || ''} · Серия «${sermon.topic || ''}»`;
+  document.getElementById('sermonDescription').textContent = sermon.excerpt || 'Описание не добавлено.';
+
+  // Видео embed
+  const videoBox = document.getElementById('videoEmbed');
+  if (sermon.videoUrl) {
+    videoBox.innerHTML = renderVideoEmbed(sermon.videoUrl);
+  } else {
+    videoBox.innerHTML = '';
+  }
+
+  // Аудио
+  if (sermon.url) {
+    audio.src = sermon.url;
+    audio.load();
+  }
+
+  // Транскрипт
+  if (sermon.transcript) {
+    renderTranscript(sermon.transcript);
+  }
+
+  showScreen('player');
+}
+
+function renderVideoEmbed(url) {
+  // RuTube
+  let m = url.match(/rutube\.ru\/video\/([a-z0-9]+)/i);
+  if (m) {
+    return `<iframe src="https://rutube.ru/play/embed/${m[1]}" allow="clipboard-write; autoplay" style="width:100%; aspect-ratio:16/9; border-radius:var(--radius); border:0;" allowfullscreen></iframe>`;
+  }
+  // VK Video
+  m = url.match(/vk(?:video)?\.(?:ru|com)\/video(-?\d+_\d+)/i);
+  if (m) {
+    const [oid, vid] = m[1].split('_');
+    return `<iframe src="https://vk.com/video_ext.php?oid=${oid}&id=${vid}&hd=2" allow="autoplay; encrypted-media; fullscreen" style="width:100%; aspect-ratio:16/9; border-radius:var(--radius); border:0;" allowfullscreen></iframe>`;
+  }
+  // YouTube
+  m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+  if (m) {
+    return `<iframe src="https://www.youtube.com/embed/${m[1]}" style="width:100%; aspect-ratio:16/9; border-radius:var(--radius); border:0;" allowfullscreen></iframe>`;
+  }
+  return `<p style="color: var(--muted); font-size: 13px;">Видео: <a href="${url}" target="_blank" style="color: var(--accent);">открыть</a></p>`;
+}
+
+function togglePlay() {
+  if (!audio.src) {
+    showToast('⚠️', 'Аудио не загружено');
+    return;
+  }
+  const btn = document.getElementById('playBtn');
+  if (audio.paused) {
+    audio.play();
+    btn.innerHTML = '❚❚ Pause';
+  } else {
+    audio.pause();
+    btn.innerHTML = '▶ Play';
+  }
+}
+
+function playHero() {
+  if (sermons.length > 0) {
+    openPlayer(sermons[0]);
+    setTimeout(togglePlay, 500);
+  }
+}
+
+function seek(seconds) {
+  if (!audio.src) return;
+  audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + seconds));
+}
+
+function setSpeed(rate) {
+  audio.playbackRate = rate;
+  showToast('⚡', 'Скорость: ' + rate + '×');
+}
+
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  document.getElementById('playerProgressBar').style.width = pct + '%';
+  document.getElementById('playerCurrentTime').textContent = fmtTime(audio.currentTime);
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  document.getElementById('playerDuration').textContent = fmtTime(audio.duration);
+});
+
+audio.addEventListener('ended', () => {
+  document.getElementById('playBtn').innerHTML = '▶ Play';
+});
+
+function fmtTime(s) {
+  if (!isFinite(s)) return '--:--';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+// ============ MODES (Description / Transcript / Notes) ============
+function setMode(mode, btn) {
+  ['description', 'transcript', 'notes'].forEach(m => {
+    document.getElementById('mode-' + m).style.display = m === mode ? 'block' : 'none';
+  });
+  document.querySelectorAll('.mode-tabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ============ TRANSCRIPT (Караоке) ============
+function renderTranscript(text) {
+  const container = document.getElementById('phrasesContainer');
+  const phrases = text.split('\n').filter(p => p.trim());
+  container.innerHTML = phrases.map((p, i) =>
+    `<button class="phrase ${i === 0 ? 'active' : ''}">${escapeHtml(p)}</button>`
+  ).join('');
+}
+
+async function saveTranscript() {
+  if (!currentSermon) {
+    showToast('⚠️', 'Откройте проповедь');
+    return;
+  }
+  const text = document.getElementById('transcriptInput').value.trim();
+  if (!text) return;
+
+  try {
+    await db.collection('sermons').doc(currentSermon.id).update({ transcript: text });
+    renderTranscript(text);
+    showToast('✓', 'Транскрипт сохранён');
+  } catch (e) {
+    showToast('❌', 'Ошибка: ' + e.message);
+  }
+}
+
+// Караоке-анимация (автопрокрутка фраз)
+let karaokeInterval;
+function startKaraoke() {
+  clearInterval(karaokeInterval);
+  let idx = 0;
+  karaokeInterval = setInterval(() => {
+    const phrases = document.querySelectorAll('.phrase');
+    if (!phrases.length) return;
+    phrases.forEach((p, i) => p.classList.toggle('active', i === idx));
+    idx = (idx + 1) % phrases.length;
+  }, 2500);
+}
+startKaraoke();
+
+// Клик на фразу — активировать
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('phrase')) {
+    document.querySelectorAll('.phrase').forEach(p => p.classList.remove('active'));
+    e.target.classList.add('active');
+    clearInterval(karaokeInterval);
+  }
+});
+
+// ============ SEARCH ============
+function performSearch() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const results = document.getElementById('searchResults');
+
+  if (!q) {
+    results.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 40px 0; font-size: 14px;">Начните вводить запрос</p>';
+    return;
+  }
+
+  const matches = sermons.filter(s => {
+    return (s.title || '').toLowerCase().includes(q)
+      || (s.preacher || '').toLowerCase().includes(q)
+      || (s.excerpt || '').toLowerCase().includes(q)
+      || (s.transcript || '').toLowerCase().includes(q)
+      || (s.topic || '').toLowerCase().includes(q);
+  });
+
+  if (matches.length === 0) {
+    results.innerHTML = `<p style="color: var(--muted); text-align: center; padding: 40px 0; font-size: 14px;">Ничего не найдено по запросу «${escapeHtml(q)}»</p>`;
+    return;
+  }
+
+  results.innerHTML = `
+    <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">Найдено: ${matches.length}</p>
+    ${matches.map(s => `
+      <div class="result-card" onclick='openPlayer(${JSON.stringify(s).replace(/'/g, "&apos;")})'>
+        <div class="row-title">${highlight(s.title, q)}</div>
+        <div class="row-sub">${escapeHtml(s.preacher || '')} · ${escapeHtml(s.topic || '')}</div>
+        ${s.excerpt ? `<p style="margin-top: 8px; font-size: 13px; color: var(--muted); line-height: 1.4;">${highlight(s.excerpt, q)}</p>` : ''}
+      </div>
+    `).join('')}`;
+}
+
+function highlight(text, q) {
+  if (!text) return '';
+  const escaped = escapeHtml(text);
+  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return escaped.replace(re, '<mark>$1</mark>');
+}
+
+// ============ CHAT ============
+let unsubChat = null;
+
+function loadChatMessages() {
+  if (!firebaseReady || !currentUser) return;
+  if (unsubChat) unsubChat();
+
+  unsubChat = db.collection('messages')
+    .orderBy('timestamp', 'desc')
+    .limit(100)
+    .onSnapshot(snap => {
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
+      renderChat(msgs);
     });
-  </script>
+}
+
+function renderChat(msgs) {
+  const container = document.getElementById('chatList');
+  if (msgs.length === 0) {
+    container.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px 0; font-size: 13px;">Пока нет сообщений. Будьте первым!</p>';
+    return;
+  }
+  container.innerHTML = msgs.map(m => `
+    <div class="bubble ${m.uid === currentUser?.uid ? 'me' : ''}">
+      ${m.uid !== currentUser?.uid ? `<strong>${escapeHtml(m.name || 'Аноним')}</strong>` : ''}
+      ${escapeHtml(m.text)}
+    </div>
+  `).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendMsg() {
+  if (!currentUser) {
+    showToast('⚠️', 'Сначала войдите');
+    return;
+  }
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  try {
+    await db.collection('messages').add({
+      uid: currentUser.uid,
+      name: currentUser.displayName || currentUser.email.split('@')[0],
+      text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    input.value = '';
+  } catch (e) {
+    showToast('❌', 'Ошибка: ' + e.message);
+  }
+}
+
+// ============ TOAST ============
+function showToast(icon, text) {
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastText').textContent = text;
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ============ UTILS ============
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ============ INIT ============
+loadSermons();
+
+// Закрытие модалок по клику на фон
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => {
+    if (e.target === bg) bg.classList.remove('open');
+  });
+});
+
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+console.log('🌴 Слово+ для Вифания · Пальма загружено');
+</script>
+
 </body>
 </html>
