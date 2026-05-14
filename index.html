@@ -1013,7 +1013,7 @@ body.is-admin .admin-panel { display: block; }
   <section class="screen active" id="screen-home">
     <div class="greeting-block">
       <p class="greeting" id="greeting">Доброе утро</p>
-      <h1 class="greeting-title">Слушай <em>и читай</em></h1>
+      <h1 class="greeting-title">Проповеди <em>и слово</em></h1>
     </div>
 
     <div class="user-info" id="userInfo">
@@ -1049,7 +1049,8 @@ body.is-admin .admin-panel { display: block; }
     </div>
     <div class="topic-row">
       <button class="chip active" onclick="filterByTopic('Все')">Все</button>
-      <button class="chip" onclick="filterByTopic('Толкование')">Толкование</button>
+      <button class="chip" onclick="filterByTopic('Проповедь')">Проповеди</button>
+      <button class="chip" onclick="filterByTopic('Цитата')">Цитаты</button>
       <button class="chip" onclick="filterByTopic('Молитва')">Молитва</button>
       <button class="chip" onclick="filterByTopic('Семья')">Семья</button>
       <button class="chip" onclick="filterByTopic('Свидетельство')">Свидетельства</button>
@@ -1060,17 +1061,27 @@ body.is-admin .admin-panel { display: block; }
       <h3>+ Добавить проповедь</h3>
       <div class="admin-form">
         <div>
+          <label>Тип контента</label>
+          <select id="sermonType" onchange="updateContentType()">
+            <option value="audio">🎵 Аудио-проповедь</option>
+            <option value="text">📄 Текстовая проповедь</option>
+            <option value="quote">💬 Цитата</option>
+          </select>
+          <p class="hint" id="typeHint" style="margin-top:6px;">Аудио будет загружено в Internet Archive</p>
+        </div>
+        <div>
           <label>Заголовок</label>
-          <input type="text" id="sermonTitle" placeholder="Название проповеди">
+          <input type="text" id="sermonTitle" placeholder="Название">
         </div>
         <div>
-          <label>Проповедник</label>
-          <input type="text" id="sermonPreacher" placeholder="Имя проповедника">
+          <label>Автор / Проповедник</label>
+          <input type="text" id="sermonPreacher" placeholder="Имя">
         </div>
         <div>
-          <label>Серия / Тема</label>
+          <label>Категория</label>
           <select id="sermonTopic">
-            <option>Толкование</option>
+            <option>Проповедь</option>
+            <option>Цитата</option>
             <option>Молитва</option>
             <option>Семья</option>
             <option>Свидетельство</option>
@@ -1083,6 +1094,7 @@ body.is-admin .admin-panel { display: block; }
           <input type="text" id="sermonDuration" placeholder="38 мин">
         </div>
 
+        <div id="audioUploadBlock">
         <div class="admin-divider"></div>
         <label>Загрузка аудио в Internet Archive</label>
         <p class="hint">📋 <b>Как получить ключи:</b><br>
@@ -1105,17 +1117,24 @@ body.is-admin .admin-panel { display: block; }
         </div>
 
         <div class="admin-divider"></div>
-        <label>Или вставь готовую ссылку</label>
-        <input type="url" id="sermonUrl" placeholder="https://archive.org/download/...">
+        <label>Или вставь готовую ссылку на MP3</label>
+        <input type="text" id="sermonUrl" placeholder="https://archive.org/download/...">
+        </div>
 
-        <div>
+        <div id="videoBlock">
           <label>Видео (RuTube / VK / YouTube) — необязательно</label>
-          <input type="url" id="sermonVideoUrl" placeholder="https://rutube.ru/video/...">
+          <input type="text" id="sermonVideoUrl" placeholder="https://rutube.ru/video/...">
         </div>
 
         <div>
-          <label>Краткое описание</label>
-          <textarea id="sermonExcerpt" rows="2" placeholder="О чём проповедь — 1-2 предложения"></textarea>
+          <label id="excerptLabel">Краткое описание</label>
+          <textarea id="sermonExcerpt" rows="3" placeholder="О чём проповедь — 1-2 предложения"></textarea>
+        </div>
+
+        <div id="bodyBlock" style="display:none;">
+          <label id="bodyLabel">Полный текст</label>
+          <textarea id="sermonBody" rows="10" placeholder="Вставьте полный текст проповеди..."></textarea>
+          <p class="hint" style="margin-top:6px;">Каждый абзац с новой строки</p>
         </div>
 
         <button class="btn-primary" onclick="addSermon()">Добавить проповедь</button>
@@ -1622,31 +1641,52 @@ function renderSermons() {
   document.getElementById('sermonsCount').textContent = filtered.length + ' шт.';
 
   if (filtered.length === 0) {
-    container.innerHTML = `<p style="color: var(--muted); padding: 20px 0; text-align: center; font-size: 14px;">Пока нет проповедей. ${isAdmin ? 'Добавьте первую через форму выше!' : ''}</p>`;
+    container.innerHTML = `<p style="color: var(--muted); padding: 20px 0; text-align: center; font-size: 14px;">Пока ничего нет. ${isAdmin ? 'Добавьте первую запись через форму выше!' : ''}</p>`;
     return;
   }
 
-  // Обновим hero card первой проповедью
-  if (sermons.length > 0) {
-    const latest = sermons[0];
-    document.getElementById('heroTitle').textContent = latest.title;
-    document.getElementById('heroMeta').textContent = `${latest.preacher || ''} · ${latest.duration || ''} · ${latest.topic || ''}`;
-    document.getElementById('heroCard').onclick = () => openPlayer(latest);
+  // Hero card — первый "аудио" или "текст" (не цитата)
+  const heroSermon = sermons.find(s => s.type !== 'quote') || sermons[0];
+  if (heroSermon) {
+    document.getElementById('heroTitle').textContent = heroSermon.title;
+    document.getElementById('heroMeta').textContent = `${heroSermon.preacher || ''}${heroSermon.duration ? ' · ' + heroSermon.duration : ''}${heroSermon.topic ? ' · ' + heroSermon.topic : ''}`;
+    document.getElementById('heroCard').onclick = () => openPlayer(heroSermon);
   }
 
-  container.innerHTML = filtered.map(s => `
-    <div class="sermon-row" onclick="openPlayer(${JSON.stringify(s).replace(/"/g, '&quot;')})">
-      <div class="cover"></div>
-      <div>
-        <div class="row-title">${escapeHtml(s.title)}</div>
-        <div class="row-sub">${escapeHtml(s.preacher || '')} ${s.topic ? '· ' + escapeHtml(s.topic) : ''}</div>
-        <div class="row-meta">${escapeHtml(s.duration || '')}</div>
+  container.innerHTML = filtered.map(s => {
+    const type = s.type || 'audio';
+    const icon = type === 'quote' ? '💬' : type === 'text' ? '📄' : '🎵';
+
+    // Для цитат — особый компактный вид
+    if (type === 'quote') {
+      return `
+        <div class="sermon-row quote-row" onclick='openPlayer(${JSON.stringify(s).replace(/'/g, "&apos;")})'>
+          <div class="cover" style="background: linear-gradient(135deg, rgba(196, 97, 74, 0.32), rgba(212, 175, 122, 0.22)); display: grid; place-items: center; font-size: 22px;">💬</div>
+          <div>
+            <div class="row-title" style="font-family: var(--font-display); font-style: italic; font-size: calc(16px * var(--ui-scale));">«${escapeHtml(s.excerpt || s.title)}»</div>
+            <div class="row-sub">— ${escapeHtml(s.preacher || s.title)}</div>
+          </div>
+          <div class="row-actions">
+            <button class="delete-btn" onclick="event.stopPropagation(); deleteSermon('${s.id}')" title="Удалить">🗑</button>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="sermon-row" onclick='openPlayer(${JSON.stringify(s).replace(/'/g, "&apos;")})'>
+        <div class="cover" style="display: grid; place-items: center; font-size: 20px;">${icon}</div>
+        <div>
+          <div class="row-title">${escapeHtml(s.title)}</div>
+          <div class="row-sub">${escapeHtml(s.preacher || '')} ${s.topic ? '· ' + escapeHtml(s.topic) : ''}</div>
+          <div class="row-meta">${escapeHtml(s.duration || '')}${type === 'text' ? ' · Текст' : ''}</div>
+        </div>
+        <div class="row-actions">
+          <button class="delete-btn" onclick="event.stopPropagation(); deleteSermon('${s.id}')" title="Удалить">🗑</button>
+        </div>
       </div>
-      <div class="row-actions">
-        <button class="delete-btn" onclick="event.stopPropagation(); deleteSermon('${s.id}')" title="Удалить">🗑</button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function filterByTopic(topic) {
@@ -1662,33 +1702,82 @@ async function addSermon() {
     return;
   }
   const title = document.getElementById('sermonTitle').value.trim();
+  const type = document.getElementById('sermonType').value;
   const url = document.getElementById('sermonUrl').value.trim();
+  const body = document.getElementById('sermonBody').value.trim();
+  const excerpt = document.getElementById('sermonExcerpt').value.trim();
+
   if (!title) {
     showToast('⚠️', 'Введите название');
     return;
   }
-  if (!url) {
+
+  // Валидация в зависимости от типа
+  if (type === 'audio' && !url) {
     showToast('⚠️', 'Загрузите аудио или вставьте ссылку');
+    return;
+  }
+  if (type === 'text' && !body) {
+    showToast('⚠️', 'Вставьте полный текст проповеди');
+    return;
+  }
+  if (type === 'quote' && !excerpt) {
+    showToast('⚠️', 'Введите текст цитаты');
     return;
   }
 
   try {
     await db.collection('sermons').add({
       title,
+      type, // 'audio' | 'text' | 'quote'
       preacher: document.getElementById('sermonPreacher').value.trim(),
       topic: document.getElementById('sermonTopic').value,
       duration: document.getElementById('sermonDuration').value.trim(),
       url: url,
       videoUrl: document.getElementById('sermonVideoUrl').value.trim(),
-      excerpt: document.getElementById('sermonExcerpt').value.trim(),
+      excerpt: excerpt,
+      body: body,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    showToast('✓', 'Проповедь добавлена');
+    const typeNames = { audio: 'Проповедь', text: 'Текст', quote: 'Цитата' };
+    showToast('✓', (typeNames[type] || 'Проповедь') + ' добавлена');
     document.querySelectorAll('#adminPanel input, #adminPanel textarea').forEach(i => i.value = '');
     document.getElementById('uploadProgress').classList.remove('show');
+    document.getElementById('sermonType').value = 'audio';
+    updateContentType();
     loadSermons();
   } catch (e) {
     showToast('❌', 'Ошибка: ' + e.message);
+  }
+}
+
+// Переключение полей в зависимости от типа контента
+function updateContentType() {
+  const type = document.getElementById('sermonType').value;
+  const audioBlock = document.getElementById('audioUploadBlock');
+  const bodyBlock = document.getElementById('bodyBlock');
+  const videoBlock = document.getElementById('videoBlock');
+  const typeHint = document.getElementById('typeHint');
+  const excerptLabel = document.getElementById('excerptLabel');
+
+  if (type === 'audio') {
+    audioBlock.style.display = 'block';
+    bodyBlock.style.display = 'none';
+    videoBlock.style.display = 'block';
+    typeHint.textContent = 'Аудио будет загружено в Internet Archive';
+    excerptLabel.textContent = 'Краткое описание';
+  } else if (type === 'text') {
+    audioBlock.style.display = 'none';
+    bodyBlock.style.display = 'block';
+    videoBlock.style.display = 'block';
+    typeHint.textContent = 'Текстовая проповедь — можно с видео';
+    excerptLabel.textContent = 'Краткое описание';
+  } else if (type === 'quote') {
+    audioBlock.style.display = 'none';
+    bodyBlock.style.display = 'none';
+    videoBlock.style.display = 'none';
+    typeHint.textContent = 'Короткая цитата для ленты';
+    excerptLabel.textContent = 'Текст цитаты';
   }
 }
 
@@ -1836,9 +1925,23 @@ const audio = document.getElementById('audioPlayer');
 
 function openPlayer(sermon) {
   currentSermon = sermon;
+  const type = sermon.type || 'audio';
+
   document.getElementById('playerTitle').textContent = sermon.title;
   document.getElementById('playerMeta').textContent = `${sermon.preacher || ''}${sermon.topic ? ' · ' + sermon.topic : ''}`;
-  document.getElementById('sermonDescription').textContent = sermon.excerpt || 'Описание не добавлено.';
+
+  // Описание / полный текст
+  const descEl = document.getElementById('sermonDescription');
+  if (type === 'text' && sermon.body) {
+    // Форматируем как абзацы
+    descEl.innerHTML = sermon.body.split(/\n+/).map(p =>
+      `<p style="margin-bottom: 14px;">${escapeHtml(p)}</p>`
+    ).join('');
+  } else if (type === 'quote') {
+    descEl.innerHTML = `<blockquote style="font-family: var(--font-display); font-style: italic; font-size: calc(22px * var(--ui-scale)); line-height: 1.4; padding: 20px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 12px;">«${escapeHtml(sermon.excerpt || sermon.title)}»</blockquote><p style="margin-top: 12px; color: var(--muted);">— ${escapeHtml(sermon.preacher || '')}</p>`;
+  } else {
+    descEl.textContent = sermon.excerpt || 'Описание не добавлено.';
+  }
 
   // Видео embed
   const videoBox = document.getElementById('videoEmbed');
@@ -1848,10 +1951,15 @@ function openPlayer(sermon) {
     videoBox.innerHTML = '';
   }
 
-  // Аудио
-  if (sermon.url) {
+  // Скрываем плеер для текста и цитат
+  const playerSheet = document.querySelector('.player-sheet');
+  if (type === 'audio' && sermon.url) {
+    if (playerSheet) playerSheet.style.display = 'block';
     audio.src = sermon.url;
     audio.load();
+  } else {
+    if (playerSheet) playerSheet.style.display = 'none';
+    audio.src = '';
   }
 
   // Транскрипт
