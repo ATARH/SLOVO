@@ -1085,7 +1085,11 @@ body.is-admin .admin-panel { display: block; }
 
         <div class="admin-divider"></div>
         <label>Загрузка аудио в Internet Archive</label>
-        <p class="hint">Введите Internet Archive S3 ключи (можно получить бесплатно на <a href="https://archive.org/account/s3.php" target="_blank" style="color: var(--accent);">archive.org/account/s3.php</a>)</p>
+        <p class="hint">📋 <b>Как получить ключи:</b><br>
+1. Зайдите на <a href="https://archive.org" target="_blank" style="color: var(--accent);">archive.org</a> и создайте бесплатный аккаунт<br>
+2. Откройте <a href="https://archive.org/account/s3.php" target="_blank" style="color: var(--accent);">archive.org/account/s3.php</a><br>
+3. Скопируйте Access Key и Secret Key сюда<br>
+<i>Ключи сохранятся в браузере, не нужно вводить каждый раз</i></p>
         <input type="text" id="iaAccessKey" placeholder="Access Key">
         <input type="password" id="iaSecretKey" placeholder="Secret Key">
 
@@ -1702,13 +1706,27 @@ async function deleteSermon(id) {
 // ============ INTERNET ARCHIVE UPLOAD ============
 async function handleAudioUpload(event) {
   const file = event.target.files[0];
-  if (!file) return;
+  if (!file) {
+    console.log('[Upload] Файл не выбран');
+    return;
+  }
+
+  console.log('[Upload] Выбран файл:', file.name, 'размер:', (file.size/1024/1024).toFixed(2), 'MB', 'тип:', file.type);
 
   const access = document.getElementById('iaAccessKey').value.trim();
   const secret = document.getElementById('iaSecretKey').value.trim();
 
   if (!access || !secret) {
     showToast('⚠️', 'Введите ключи Internet Archive');
+    console.error('[Upload] Ключи не введены');
+    return;
+  }
+
+  console.log('[Upload] Ключи: Access длина=' + access.length + ', Secret длина=' + secret.length);
+
+  // Проверка размера (Internet Archive принимает большие, но в браузере лучше до 500 МБ)
+  if (file.size > 500 * 1024 * 1024) {
+    showToast('⚠️', 'Файл больше 500 МБ — слишком большой');
     return;
   }
 
@@ -1717,48 +1735,99 @@ async function handleAudioUpload(event) {
   const status = document.getElementById('uploadStatus');
 
   progressBar.style.width = '5%';
+  status.style.color = 'var(--accent)';
   status.textContent = 'Подготовка...';
 
-  const identifier = 'slovo-' + Date.now();
-  const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
+  // Генерируем уникальный identifier
+  const timestamp = Date.now();
+  const identifier = 'slovo-' + timestamp;
+  // Очищаем имя файла от спецсимволов
+  const safeName = file.name
+    .replace(/[^a-zA-Z0-9.-]/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
   const uploadUrl = `https://s3.us.archive.org/${identifier}/${safeName}`;
 
-  try {
-    status.textContent = 'Загружаю файл в Internet Archive...';
-    progressBar.style.width = '20%';
+  console.log('[Upload] URL для загрузки:', uploadUrl);
 
-    const title = document.getElementById('sermonTitle').value || file.name;
+  const title = document.getElementById('sermonTitle').value.trim() || file.name;
+  // Кодируем заголовок чтобы не было проблем с кириллицей в заголовках
+  const titleEncoded = encodeURIComponent(title);
 
-    const response = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `LOW ${access}:${secret}`,
-        'x-archive-meta-mediatype': 'audio',
-        'x-archive-meta-collection': 'opensource_audio',
-        'x-archive-meta-title': encodeURIComponent(title),
-        'x-archive-auto-make-bucket': '1',
-        'Content-Type': file.type || 'audio/mpeg'
-      },
-      body: file
-    });
+  // Используем XMLHttpRequest вместо fetch — он надёжнее работает с Internet Archive
+  // и даёт прогресс загрузки
+  const xhr = new XMLHttpRequest();
 
-    progressBar.style.width = '90%';
+  xhr.upload.addEventListener('progress', (e) => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 85) + 10; // 10-95%
+      progressBar.style.width = pct + '%';
+      const mb = (e.loaded / 1024 / 1024).toFixed(1);
+      const totalMb = (e.total / 1024 / 1024).toFixed(1);
+      status.textContent = `Загружаю... ${mb} / ${totalMb} МБ (${pct}%)`;
+      console.log('[Upload] Прогресс:', pct + '%');
+    }
+  });
 
-    if (response.ok || response.status === 200) {
+  xhr.addEventListener('load', () => {
+    console.log('[Upload] Завершено. Статус:', xhr.status, 'Ответ:', xhr.responseText);
+    if (xhr.status >= 200 && xhr.status < 300) {
       progressBar.style.width = '100%';
       const directUrl = `https://archive.org/download/${identifier}/${safeName}`;
       document.getElementById('sermonUrl').value = directUrl;
       status.textContent = '✓ Готово! Нажмите "Добавить проповедь"';
       status.style.color = 'var(--success)';
       showToast('🎵', 'Файл загружен!');
+      console.log('[Upload] Прямая ссылка:', directUrl);
+      // Сохраним ключи в localStorage чтобы не вводить каждый раз
+      localStorage.setItem('slovo-ia-access', access);
+      localStorage.setItem('slovo-ia-secret', secret);
     } else {
-      throw new Error('Статус: ' + response.status);
+      progressBar.style.width = '0%';
+      status.textContent = `❌ Ошибка ${xhr.status}: ${xhr.statusText || 'неизвестно'}`;
+      status.style.color = 'var(--danger)';
+      console.error('[Upload] Ошибка:', xhr.status, xhr.responseText);
+      showToast('❌', 'Ошибка: ' + xhr.status);
     }
-  } catch (e) {
+  });
+
+  xhr.addEventListener('error', () => {
     progressBar.style.width = '0%';
+    status.textContent = '❌ Ошибка сети. Проверьте подключение и CORS (см. консоль)';
+    status.style.color = 'var(--danger)';
+    console.error('[Upload] Ошибка сети');
+    showToast('❌', 'Ошибка сети');
+  });
+
+  xhr.addEventListener('abort', () => {
+    status.textContent = 'Загрузка отменена';
+    status.style.color = 'var(--muted)';
+    console.log('[Upload] Отменено');
+  });
+
+  try {
+    xhr.open('PUT', uploadUrl, true);
+    xhr.setRequestHeader('Authorization', `LOW ${access}:${secret}`);
+    xhr.setRequestHeader('x-archive-meta-mediatype', 'audio');
+    xhr.setRequestHeader('x-archive-meta-collection', 'opensource_audio');
+    xhr.setRequestHeader('x-archive-meta-title', titleEncoded);
+    xhr.setRequestHeader('x-archive-auto-make-bucket', '1');
+    xhr.setRequestHeader('x-archive-meta-creator', encodeURIComponent('Slovo+'));
+    // Content-Type ставим из файла
+    if (file.type) {
+      xhr.setRequestHeader('Content-Type', file.type);
+    }
+
+    status.textContent = 'Загружаю файл в Internet Archive...';
+    progressBar.style.width = '10%';
+    console.log('[Upload] Отправляю запрос...');
+
+    xhr.send(file);
+  } catch (e) {
+    console.error('[Upload] Исключение:', e);
     status.textContent = '❌ Ошибка: ' + e.message;
     status.style.color = 'var(--danger)';
-    showToast('❌', 'Ошибка загрузки');
+    showToast('❌', e.message);
   }
 }
 
@@ -2040,6 +2109,18 @@ function escapeHtml(str) {
 }
 
 // ============ INIT ============
+// Восстановим ключи Internet Archive из localStorage
+const savedAccess = localStorage.getItem('slovo-ia-access');
+const savedSecret = localStorage.getItem('slovo-ia-secret');
+if (savedAccess) {
+  const accessInput = document.getElementById('iaAccessKey');
+  if (accessInput) accessInput.value = savedAccess;
+}
+if (savedSecret) {
+  const secretInput = document.getElementById('iaSecretKey');
+  if (secretInput) secretInput.value = savedSecret;
+}
+
 loadSermons();
 
 // Закрытие модалок по клику на фон
