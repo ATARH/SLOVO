@@ -381,7 +381,10 @@ img { display: block; max-width: 100%; }
   overflow: hidden;
   flex-shrink: 0;
 }
-.cover::after {
+.cover[style*="background-image"]::after {
+  display: none;
+}
+.cover:not([style*="background-image"])::after {
   content: "";
   position: absolute;
   inset: 16px 18px;
@@ -1094,6 +1097,31 @@ body.is-admin .admin-panel { display: block; }
           <input type="text" id="sermonDuration" placeholder="38 мин">
         </div>
 
+        <div id="coverUploadBlock">
+          <div class="admin-divider"></div>
+          <label>🖼 Обложка проповеди (необязательно)</label>
+          <p class="hint">Картинка-превью, которая будет показана в ленте и в плеере. JPG или PNG, желательно квадратная.</p>
+
+          <div class="upload-zone" id="coverUploadZone" onclick="document.getElementById('coverFile').click()" style="margin-top:8px;">
+            <div class="ph">🖼</div>
+            <div id="coverUploadText">Перетащи картинку или нажми для выбора</div>
+            <input type="file" id="coverFile" accept="image/*" style="display:none;" onchange="handleCoverUpload(event)">
+          </div>
+
+          <div class="upload-progress" id="coverProgress">
+            <div class="progress"><span id="coverProgressBar"></span></div>
+            <div class="status" id="coverStatus">Загружаю...</div>
+          </div>
+
+          <div id="coverPreview" style="display:none; margin-top:12px;">
+            <p class="hint" style="margin-bottom:6px;">Превью:</p>
+            <img id="coverPreviewImg" src="" style="width:100%; max-width:200px; border-radius:12px; border:1px solid var(--border);">
+            <button onclick="removeCover()" style="display:block; margin-top:8px; padding:6px 12px; background:transparent; border:1px solid var(--border); border-radius:999px; color:var(--danger); font-size:12px;">Убрать обложку</button>
+          </div>
+
+          <input type="hidden" id="sermonCoverUrl" value="">
+        </div>
+
         <div id="audioUploadBlock">
         <div class="admin-divider"></div>
         <label>Загрузка аудио в Internet Archive</label>
@@ -1651,6 +1679,18 @@ function renderSermons() {
     document.getElementById('heroTitle').textContent = heroSermon.title;
     document.getElementById('heroMeta').textContent = `${heroSermon.preacher || ''}${heroSermon.duration ? ' · ' + heroSermon.duration : ''}${heroSermon.topic ? ' · ' + heroSermon.topic : ''}`;
     document.getElementById('heroCard').onclick = () => openPlayer(heroSermon);
+
+    // Применяем обложку как фон с затемнением для читаемости текста
+    const heroCard = document.getElementById('heroCard');
+    if (heroSermon.coverUrl) {
+      heroCard.style.backgroundImage = `linear-gradient(135deg, rgba(15, 23, 41, 0.85) 0%, rgba(36, 50, 80, 0.7) 100%), url('${heroSermon.coverUrl}')`;
+      heroCard.style.backgroundSize = 'cover';
+      heroCard.style.backgroundPosition = 'center';
+    } else {
+      heroCard.style.backgroundImage = '';
+      heroCard.style.backgroundSize = '';
+      heroCard.style.backgroundPosition = '';
+    }
   }
 
   container.innerHTML = filtered.map(s => {
@@ -1661,7 +1701,7 @@ function renderSermons() {
     if (type === 'quote') {
       return `
         <div class="sermon-row quote-row" onclick='openPlayer(${JSON.stringify(s).replace(/'/g, "&apos;")})'>
-          <div class="cover" style="background: linear-gradient(135deg, rgba(196, 97, 74, 0.32), rgba(212, 175, 122, 0.22)); display: grid; place-items: center; font-size: 22px;">💬</div>
+          <div class="cover" style="${s.coverUrl ? `background-image: url('${escapeHtml(s.coverUrl)}'); background-size: cover; background-position: center;` : `background: linear-gradient(135deg, rgba(196, 97, 74, 0.32), rgba(212, 175, 122, 0.22)); display: grid; place-items: center; font-size: 22px;`}">${s.coverUrl ? '' : '💬'}</div>
           <div>
             <div class="row-title" style="font-family: var(--font-display); font-style: italic; font-size: calc(16px * var(--ui-scale));">«${escapeHtml(s.excerpt || s.title)}»</div>
             <div class="row-sub">— ${escapeHtml(s.preacher || s.title)}</div>
@@ -1675,7 +1715,7 @@ function renderSermons() {
 
     return `
       <div class="sermon-row" onclick='openPlayer(${JSON.stringify(s).replace(/'/g, "&apos;")})'>
-        <div class="cover" style="display: grid; place-items: center; font-size: 20px;">${icon}</div>
+        <div class="cover" style="${s.coverUrl ? `background-image: url('${escapeHtml(s.coverUrl)}'); background-size: cover; background-position: center;` : `display: grid; place-items: center; font-size: 20px;`}">${s.coverUrl ? '' : icon}</div>
         <div>
           <div class="row-title">${escapeHtml(s.title)}</div>
           <div class="row-sub">${escapeHtml(s.preacher || '')} ${s.topic ? '· ' + escapeHtml(s.topic) : ''}</div>
@@ -1735,14 +1775,20 @@ async function addSermon() {
       duration: document.getElementById('sermonDuration').value.trim(),
       url: url,
       videoUrl: document.getElementById('sermonVideoUrl').value.trim(),
+      coverUrl: document.getElementById('sermonCoverUrl').value.trim(),
       excerpt: excerpt,
       body: body,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     const typeNames = { audio: 'Проповедь', text: 'Текст', quote: 'Цитата' };
     showToast('✓', (typeNames[type] || 'Проповедь') + ' добавлена');
-    document.querySelectorAll('#adminPanel input, #adminPanel textarea').forEach(i => i.value = '');
+    document.querySelectorAll('#adminPanel input, #adminPanel textarea').forEach(i => {
+      // Не очищаем ключи Internet Archive
+      if (i.id !== 'iaAccessKey' && i.id !== 'iaSecretKey') i.value = '';
+    });
     document.getElementById('uploadProgress').classList.remove('show');
+    document.getElementById('coverProgress').classList.remove('show');
+    document.getElementById('coverPreview').style.display = 'none';
     document.getElementById('sermonType').value = 'audio';
     updateContentType();
     loadSermons();
@@ -1920,6 +1966,111 @@ async function handleAudioUpload(event) {
   }
 }
 
+// ============ COVER UPLOAD (картинка-обложка) ============
+async function handleCoverUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  console.log('[Cover] Файл:', file.name, file.size);
+
+  const access = document.getElementById('iaAccessKey').value.trim();
+  const secret = document.getElementById('iaSecretKey').value.trim();
+
+  if (!access || !secret) {
+    showToast('⚠️', 'Сначала введите ключи Internet Archive');
+    return;
+  }
+
+  // Проверка размера — картинки должны быть не больше 10 МБ
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('⚠️', 'Картинка больше 10 МБ — сожмите её');
+    return;
+  }
+
+  document.getElementById('coverProgress').classList.add('show');
+  const progressBar = document.getElementById('coverProgressBar');
+  const status = document.getElementById('coverStatus');
+
+  progressBar.style.width = '10%';
+  status.style.color = 'var(--accent)';
+  status.textContent = 'Загружаю обложку...';
+
+  const timestamp = Date.now();
+  const identifier = 'slovo-cover-' + timestamp;
+  const safeName = file.name
+    .replace(/[^a-zA-Z0-9.-]/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase() || 'cover.jpg';
+  const uploadUrl = `https://s3.us.archive.org/${identifier}/${safeName}`;
+
+  console.log('[Cover] URL:', uploadUrl);
+
+  const xhr = new XMLHttpRequest();
+
+  xhr.upload.addEventListener('progress', (e) => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 85) + 10;
+      progressBar.style.width = pct + '%';
+      status.textContent = `Загружаю... ${pct}%`;
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    console.log('[Cover] Статус:', xhr.status);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      progressBar.style.width = '100%';
+      const directUrl = `https://archive.org/download/${identifier}/${safeName}`;
+
+      // Сохраняем ссылку в hidden input
+      document.getElementById('sermonCoverUrl').value = directUrl;
+
+      // Показываем превью
+      const preview = document.getElementById('coverPreview');
+      const previewImg = document.getElementById('coverPreviewImg');
+      previewImg.src = directUrl;
+      preview.style.display = 'block';
+
+      status.textContent = '✓ Обложка загружена';
+      status.style.color = 'var(--success)';
+      showToast('🖼', 'Обложка загружена!');
+    } else {
+      progressBar.style.width = '0%';
+      status.textContent = `❌ Ошибка ${xhr.status}`;
+      status.style.color = 'var(--danger)';
+      showToast('❌', 'Ошибка ' + xhr.status);
+    }
+  });
+
+  xhr.addEventListener('error', () => {
+    progressBar.style.width = '0%';
+    status.textContent = '❌ Ошибка сети';
+    status.style.color = 'var(--danger)';
+    showToast('❌', 'Ошибка сети');
+  });
+
+  try {
+    xhr.open('PUT', uploadUrl, true);
+    xhr.setRequestHeader('Authorization', `LOW ${access}:${secret}`);
+    xhr.setRequestHeader('x-archive-meta-mediatype', 'image');
+    xhr.setRequestHeader('x-archive-meta-collection', 'opensource_media');
+    xhr.setRequestHeader('x-archive-auto-make-bucket', '1');
+    if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+    xhr.send(file);
+  } catch (e) {
+    console.error('[Cover] Ошибка:', e);
+    status.textContent = '❌ ' + e.message;
+    showToast('❌', e.message);
+  }
+}
+
+function removeCover() {
+  document.getElementById('sermonCoverUrl').value = '';
+  document.getElementById('coverPreview').style.display = 'none';
+  document.getElementById('coverProgress').classList.remove('show');
+  document.getElementById('coverFile').value = '';
+  showToast('✓', 'Обложка убрана');
+}
+
 // ============ PLAYER ============
 const audio = document.getElementById('audioPlayer');
 
@@ -1929,6 +2080,21 @@ function openPlayer(sermon) {
 
   document.getElementById('playerTitle').textContent = sermon.title;
   document.getElementById('playerMeta').textContent = `${sermon.preacher || ''}${sermon.topic ? ' · ' + sermon.topic : ''}`;
+
+  // Если есть обложка — применяем как фон detail-cover
+  const detailCoverEl = document.querySelector('.detail-cover');
+  if (detailCoverEl) {
+    if (sermon.coverUrl) {
+      detailCoverEl.style.backgroundImage = `linear-gradient(180deg, rgba(15, 23, 41, 0.2) 0%, rgba(15, 23, 41, 0.85) 100%), url('${sermon.coverUrl}')`;
+      detailCoverEl.style.backgroundSize = 'cover';
+      detailCoverEl.style.backgroundPosition = 'center';
+    } else {
+      // Сбрасываем на дефолтный градиент
+      detailCoverEl.style.backgroundImage = '';
+      detailCoverEl.style.backgroundSize = '';
+      detailCoverEl.style.backgroundPosition = '';
+    }
+  }
 
   // Описание / полный текст
   const descEl = document.getElementById('sermonDescription');
